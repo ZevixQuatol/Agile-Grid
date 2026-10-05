@@ -1,0 +1,22 @@
+{
+  "pages": [
+    {
+      "items": [
+        { "id": "app-1", "type": "app", "x": 0, "y": 0, "w": 1, "h": 1 },
+        { "id": "small-1", "type": "small", "x": 1, "y": 0, "w": 2, "h": 1 },
+        { "id": "medium-1", "type": "medium", "x": 3, "y": 0, "w": 2, "h": 2 },
+        { "id": "wide-1", "type": "wide", "x": 5, "y": 0, "w": 4, "h": 2 },
+        { "id": "large-1", "type": "large", "x": 0, "y": 2, "w": 4, "h": 4 }
+      ]
+    },
+    {
+      "items": [
+        { "id": "app-2", "type": "app", "x": 11, "y": 0, "w": 1, "h": 1 },
+        { "id": "medium-2", "type": "medium", "x": 0, "y": 1, "w": 2, "h": 2 },
+        { "id": "wide-2", "type": "wide", "x": 2, "y": 1, "w": 4, "h": 2 },
+        { "id": "large-2", "type": "large", "x": 8, "y": 1, "w": 4, "h": 4 },
+        { "id": "small-2", "type": "small", "x": 0, "y": 4, "w": 2, "h": 1 }
+      ]
+    }
+  ]
+}

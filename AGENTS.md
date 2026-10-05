@@ -12,7 +12,7 @@ Apply the user's default communication preference from C:/Users/MaoEr/.codex/ski
 - Product: Agile Grid / 灵巧网格.
 - Read docs/design-v1.0.md and docs/design-decisions.md before implementation.
 - docs/design-v1.0.md is the frozen v1.0 design; use docs/development-plan.md for task order.
-- Current task to start: Task 001, basic paged JSON rendering.
+- Task 001 is complete; see docs/task001-validation.md. Next task: Task 002, editing mode and Pointer drag.
 - Use Next.js App Router, React, strict TypeScript, Zustand and plain CSS; prefer latest compatible stable versions and pin actual dependencies.
 - Keep core/grid pure TypeScript, independent of React, DOM, Next.js and Browser API.
 - Every grid page has finite columns and rows and a fixed viewport. No horizontal or vertical scrolling.
