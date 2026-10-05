@@ -1,30 +1,29 @@
 "use client";
 
-import { useRef, type ReactNode } from "react";
+import type { ReactNode, RefObject } from "react";
 import { fitsGrid } from "@/core/grid/coordinates";
-import type { AgileGridItem, GridConfig, GridPage } from "@/core/grid/types";
-import { useGridMetrics } from "@/hooks/useGridMetrics";
+import type { AgileGridItem, GridConfig, GridMetrics, GridPage } from "@/core/grid/types";
 import { GridItem } from "./GridItem";
 import { GridOverlay } from "./GridOverlay";
 
 interface Props {
   page: GridPage;
   config: GridConfig;
+  metrics: GridMetrics | null;
+  viewportRef: RefObject<HTMLDivElement | null>;
   showOverlay: boolean;
   renderItem: (item: AgileGridItem) => ReactNode;
 }
 
-export function GridViewport({ page, config, showOverlay, renderItem }: Props) {
-  const ref = useRef<HTMLDivElement>(null);
-  const metrics = useGridMetrics(ref, config);
+export function GridViewport({ page, config, metrics, viewportRef, showOverlay, renderItem }: Props) {
   const hasCapacity = metrics !== null && metrics.cellWidth > 0 && metrics.rows > 0;
   const outside = metrics ? page.items.filter((item) => !fitsGrid(item, metrics)) : [];
   const canRender = hasCapacity && outside.length === 0;
 
   return (
-    <main className="grid-workspace">
+    <main className="grid-workspace" style={{ padding: `${config.gapY}px ${config.gapX}px` }}>
       <div
-        ref={ref}
+        ref={viewportRef}
         className="grid-viewport"
         role="region"
         aria-label="网格视口"
@@ -55,15 +54,6 @@ export function GridViewport({ page, config, showOverlay, renderItem }: Props) {
           </div>
         )}
       </div>
-      <footer className="grid-status" aria-label="网格信息">
-        <div className="metric-group">
-          <span><b>{config.columns}</b> 列</span>
-          <span><b>{metrics?.rows ?? "—"}</b> 行</span>
-          <span className="metric-secondary">Cell <b>{metrics ? metrics.cellWidth.toFixed(2) : "—"}</b> × <b>{config.rowHeight}</b> px</span>
-          <span className="metric-secondary">Gap <b>{config.gapX}</b> / <b>{config.gapY}</b> px</span>
-        </div>
-        <span className="status-mode"><i aria-hidden="true" />浏览模式 · 本页 {page.items.length} 个块</span>
-      </footer>
     </main>
   );
 }
