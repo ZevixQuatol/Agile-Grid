@@ -85,3 +85,5 @@ npm registry 核对时 TypeScript 最新稳定标签为 7.0.2，但 Next.js 的 
 - 重新完成生产构建及其 TypeScript 检查。布局算法未改动，本轮未重跑 36 项核心单元测试。
 
 本地截图：`output/playwright/ui-spacing-page1.png`、`output/playwright/ui-spacing-narrow.png`。
+
+2026-10-05 后续按用户要求去除主内容容器的卡片外观。Chrome 实测 GridViewport 背景为透明，四边 border 为 0px、box-shadow 为 none、圆角为 0px；1424×836 的区域尺寸和 8px 留白保持一致，页面无滚动，顶栏正常，控制台 0 错误、0 警告。生产构建及其类型检查通过；截图为 `output/playwright/ui-no-container-card.png`。
