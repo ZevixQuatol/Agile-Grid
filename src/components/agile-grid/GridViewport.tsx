@@ -2,8 +2,7 @@
 
 import type { ReactNode, RefObject } from "react";
 import { useEffect } from "react";
-import { dragToGrid } from "@/core/grid/coordinates";
-import { fitsGrid } from "@/core/grid/coordinates";
+import { dragToGrid, fitsGrid, gridToPixel } from "@/core/grid/coordinates";
 import type { AgileGridItem, DragSession, GridConfig, GridMetrics, GridPage } from "@/core/grid/types";
 import { GridItem } from "./GridItem";
 import { GridOverlay } from "./GridOverlay";
@@ -30,6 +29,7 @@ export function GridViewport({ page, config, metrics, viewportRef, showOverlay, 
   const hasCapacity = metrics !== null && metrics.cellWidth > 0 && metrics.rows > 0;
   const outside = metrics ? page.items.filter((item) => !fitsGrid(item, metrics)) : [];
   const canRender = hasCapacity && outside.length === 0;
+  const dropPreview = drag && metrics && canRender ? gridToPixel(drag.preview, metrics) : null;
 
   useEffect(() => {
     if (!drag || !metrics || !viewportRef.current) return;
@@ -70,6 +70,18 @@ export function GridViewport({ page, config, metrics, viewportRef, showOverlay, 
         onClick={(event) => { if (editing && event.target === event.currentTarget) onSelect(undefined); }}
       >
         {hasCapacity && showOverlay && <GridOverlay metrics={metrics} />}
+        {dropPreview && (
+          <div
+            className="grid-placeholder"
+            data-blocked={drag?.blocked}
+            aria-hidden="true"
+            style={{
+              transform: `translate3d(${dropPreview.left}px, ${dropPreview.top}px, 0)`,
+              width: dropPreview.width,
+              height: dropPreview.height,
+            }}
+          />
+        )}
         {canRender ? (
           page.items.map((item) => (
             <GridItem key={item.id} item={drag?.id === item.id ? { ...item, ...drag.preview } : item} metrics={metrics} renderItem={renderItem} editing={editing} selected={item.id === selectedItemId} dragging={drag?.id === item.id} blocked={drag?.id === item.id && drag.blocked} onDelete={onDelete} onSelect={onSelect} onPointerDown={(event, value) => {
