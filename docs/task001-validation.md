@@ -87,3 +87,11 @@ npm registry 核对时 TypeScript 最新稳定标签为 7.0.2，但 Next.js 的 
 本地截图：`output/playwright/ui-spacing-page1.png`、`output/playwright/ui-spacing-narrow.png`。
 
 2026-10-05 后续按用户要求去除主内容容器的卡片外观。Chrome 实测 GridViewport 背景为透明，四边 border 为 0px、box-shadow 为 none、圆角为 0px；1424×836 的区域尺寸和 8px 留白保持一致，页面无滚动，顶栏正常，控制台 0 错误、0 警告。生产构建及其类型检查通过；截图为 `output/playwright/ui-no-container-card.png`。
+
+## 2026-10-06：Task 002 拖拽交互验证
+
+- 类型检查：`rtk proxy npx --yes pnpm@12.9.1 typecheck` 通过。
+- 核心测试：`rtk proxy npx --yes pnpm@12.9.1 test` 通过，2 个测试文件、40 项测试通过；新增 store 测试覆盖遮挡保持合法预览和编辑模式删除边界。
+- 生产构建：`rtk proxy npx --yes pnpm@12.9.1 build` 通过，Next.js 16.3.8 静态生成完成。
+- Chrome 生产页面：在 `http://127.0.0.1:3101/` 验证编辑模式显示每个块左上角 `−` 删除按钮；删除 `app-1` 后本页块数由 5 变 4；合法拖拽将 `app-1` 移至 `(x:8,y:6)`；拖向 `small-1` 的占用位置后仍保持 `(x:0,y:0)`，未产生遮挡；控制台无错误或警告。
+- 真实拖拽中的中间帧未保存为截图；代码路径已由 `preview` 坐标驱动渲染，静态检查和完成态 Chrome 行为均通过。不同浏览器及部署环境未验证。

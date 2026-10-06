@@ -4,6 +4,7 @@ import {
   getGridMetrics,
   gridToPixel,
   dragToGrid,
+  rectsOverlap,
   pixelToGrid,
 } from "../../src/core/grid/coordinates";
 import type { GridConfig, GridRect } from "../../src/core/grid/types";
@@ -150,5 +151,10 @@ describe("drag coordinates", () => {
     expect(dragToGrid({ x: 2, y: 1, w: 3, h: 2 }, { x: 12, y: 6 }, { x: 400, y: 200 }, metrics)).toEqual({ x: 4, y: 2 });
     expect(dragToGrid({ x: 2, y: 1, w: 3, h: 2 }, { x: 12, y: 6 }, { x: -100, y: -50 }, metrics)).toEqual({ x: 0, y: 0 });
     expect(dragToGrid({ x: 2, y: 1, w: 3, h: 2 }, { x: 12, y: 6 }, { x: 2000, y: 2000 }, metrics)).toEqual({ x: 9, y: 4 });
+  });
+
+  it("detects only area intersections", () => {
+    expect(rectsOverlap({ x: 0, y: 0, w: 2, h: 2 }, { x: 1, y: 1, w: 2, h: 2 })).toBe(true);
+    expect(rectsOverlap({ x: 0, y: 0, w: 2, h: 2 }, { x: 2, y: 0, w: 1, h: 1 })).toBe(false);
   });
 });

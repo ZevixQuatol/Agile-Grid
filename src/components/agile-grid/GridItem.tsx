@@ -13,9 +13,12 @@ interface Props {
   onPointerUp?: (event: PointerEvent<HTMLElement>) => void;
   onPointerCancel?: () => void;
   onSelect: (id: string) => void;
+  onDelete: (id: string) => void;
+  dragging?: boolean;
+  blocked?: boolean;
 }
 
-export const GridItem = memo(function GridItem({ item, metrics, renderItem, editing, selected, onPointerDown, onSelect, onPointerMove, onPointerUp, onPointerCancel }: Props) {
+export const GridItem = memo(function GridItem({ item, metrics, renderItem, editing, selected, onPointerDown, onSelect, onPointerMove, onPointerUp, onPointerCancel, onDelete, dragging, blocked }: Props) {
   const rect = gridToPixel(item, metrics);
 
   return (
@@ -23,6 +26,8 @@ export const GridItem = memo(function GridItem({ item, metrics, renderItem, edit
       className="grid-item"
       data-selected={selected}
       data-editing={editing}
+      data-dragging={dragging}
+      data-blocked={blocked}
       aria-label={item.id}
       data-item-id={item.id}
       data-type={item.type}
@@ -36,6 +41,7 @@ export const GridItem = memo(function GridItem({ item, metrics, renderItem, edit
         height: rect.height,
       }}
       onPointerDown={(event) => {
+        if (editing) event.preventDefault();
         onSelect(item.id);
         if (editing) onPointerDown(event, item);
       }}
@@ -43,6 +49,7 @@ export const GridItem = memo(function GridItem({ item, metrics, renderItem, edit
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerCancel}
     >
+      {editing && <button className="item-delete" type="button" aria-label={`删除 ${item.id}`} title="删除块" onPointerDown={(event) => { event.preventDefault(); event.stopPropagation(); }} onClick={(event) => { event.preventDefault(); event.stopPropagation(); onDelete(item.id); }}>−</button>}
       {renderItem(item)}
     </section>
   );

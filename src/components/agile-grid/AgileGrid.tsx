@@ -30,6 +30,7 @@ export function AgileGrid() {
   const previewDrag = useStore(store, (value) => value.previewDrag);
   const commitDrag = useStore(store, (value) => value.commitDrag);
   const cancelDrag = useStore(store, (value) => value.cancelDrag);
+  const removeItem = useStore(store, (value) => value.removeItem);
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === "Escape") cancelDrag();
   };
@@ -68,7 +69,7 @@ export function AgileGrid() {
           </button>
         </div>
       </header>
-      <GridViewport page={page} config={config} metrics={metrics} viewportRef={viewportRef} showOverlay={showOverlay} renderItem={renderDemo} editing={editing} selectedItemId={selectedItemId} onSelect={selectItem} onBeginDrag={(id, offset) => beginDrag(id, activePage, offset)} onPreviewDrag={previewDrag} onCommitDrag={commitDrag} onCancelDrag={cancelDrag} drag={drag} />
+      <GridViewport page={page} config={config} metrics={metrics} viewportRef={viewportRef} showOverlay={showOverlay} renderItem={renderDemo} editing={editing} selectedItemId={selectedItemId} onSelect={selectItem} onBeginDrag={(id, offset) => beginDrag(id, activePage, offset)} onPreviewDrag={previewDrag} onCommitDrag={commitDrag} onCancelDrag={cancelDrag} onDelete={removeItem} drag={drag} />
     </div>
   );
 }

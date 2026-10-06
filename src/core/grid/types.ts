@@ -85,4 +85,5 @@ export interface DragSession {
   start: GridRect;
   preview: GridRect;
   pointerOffset: GridPoint;
+  blocked: boolean;
 }

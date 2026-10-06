@@ -48,6 +48,10 @@ export function fitsGrid(rect: GridRect, bounds: GridBounds): boolean {
   );
 }
 
+export function rectsOverlap(a: GridRect, b: GridRect): boolean {
+  return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+}
+
 function requireCells(metrics: GridMetrics): void {
   if (
     !Number.isFinite(metrics.cellWidth) || metrics.cellWidth <= 0 ||

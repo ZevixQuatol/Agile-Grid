@@ -1,5 +1,6 @@
 import { createStore } from "zustand/vanilla";
 import demoLayout from "@/data/demo-layout.json";
+import { rectsOverlap } from "@/core/grid/coordinates";
 import type { AgileGridState, DragSession, GridConfig, GridLayout, GridRect } from "@/core/grid/types";
 
 const defaultConfig: GridConfig = {
@@ -20,6 +21,7 @@ interface AgileGridStore {
   previewDrag: (rect: GridRect) => void;
   commitDrag: () => void;
   cancelDrag: () => void;
+  removeItem: (id: string) => void;
   drag: DragSession | null;
 }
 
@@ -54,16 +56,25 @@ export function createAgileGridStore(layout: GridLayout = demoLayout) {
         const item = state.layout.pages[page]?.items.find((candidate) => candidate.id === id);
         if (!item) return {};
         started = true;
-        return { state: { ...state, selectedItemId: id }, drag: { id, page, start: { x: item.x, y: item.y, w: item.w, h: item.h }, preview: { x: item.x, y: item.y, w: item.w, h: item.h }, pointerOffset } };
+        return { state: { ...state, selectedItemId: id }, drag: { id, page, start: { x: item.x, y: item.y, w: item.w, h: item.h }, preview: { x: item.x, y: item.y, w: item.w, h: item.h }, pointerOffset, blocked: false } };
       });
       return started;
     },
-    previewDrag: (rect) => set(({ drag }) => drag ? { drag: { ...drag, preview: rect } } : {}),
+    previewDrag: (rect) => set(({ state, drag }) => {
+      if (!drag) return {};
+      const occupied = state.layout.pages[drag.page]?.items.some((item) => item.id !== drag.id && rectsOverlap(rect, item)) ?? false;
+      return { drag: { ...drag, preview: occupied ? drag.preview : rect, blocked: occupied } };
+    }),
     commitDrag: () => set(({ state, drag }) => {
       if (!drag) return {};
       const pages = state.layout.pages.map((page, index) => index !== drag.page ? page : { items: page.items.map((item) => item.id === drag.id ? { ...item, ...drag.preview } : item) });
       return { state: { ...state, layout: { pages } }, drag: null };
     }),
     cancelDrag: () => set(({ drag }) => drag ? { drag: null } : {}),
+    removeItem: (id) => set(({ state, drag }) => {
+      if (!state.editing) return {};
+      const pages = state.layout.pages.map((page, index) => index === state.activePage ? { items: page.items.filter((item) => item.id !== id) } : page);
+      return { state: { ...state, layout: { pages }, selectedItemId: state.selectedItemId === id ? undefined : state.selectedItemId }, drag: drag?.id === id ? null : drag };
+    }),
   }));
 }
