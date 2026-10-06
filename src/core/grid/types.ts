@@ -78,3 +78,11 @@ export interface AgileGridState {
   selectedItemId?: string;
   editing: boolean;
 }
+
+export interface DragSession {
+  id: string;
+  page: number;
+  start: GridRect;
+  preview: GridRect;
+  pointerOffset: GridPoint;
+}

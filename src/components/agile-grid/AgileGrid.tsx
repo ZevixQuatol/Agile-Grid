@@ -21,12 +21,24 @@ export function AgileGrid() {
   const showOverlay = useStore(store, (value) => value.showOverlay);
   const setActivePage = useStore(store, (value) => value.setActivePage);
   const toggleOverlay = useStore(store, (value) => value.toggleOverlay);
+  const editing = useStore(store, (value) => value.state.editing);
+  const selectedItemId = useStore(store, (value) => value.state.selectedItemId);
+  const drag = useStore(store, (value) => value.drag);
+  const toggleEditing = useStore(store, (value) => value.toggleEditing);
+  const selectItem = useStore(store, (value) => value.selectItem);
+  const beginDrag = useStore(store, (value) => value.beginDrag);
+  const previewDrag = useStore(store, (value) => value.previewDrag);
+  const commitDrag = useStore(store, (value) => value.commitDrag);
+  const cancelDrag = useStore(store, (value) => value.cancelDrag);
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === "Escape") cancelDrag();
+  };
   const viewportRef = useRef<HTMLDivElement>(null);
   const metrics = useGridMetrics(viewportRef, config);
   const page = layout.pages[activePage];
 
   return (
-    <div className="agile-grid-shell">
+    <div className="agile-grid-shell" onKeyDown={handleKeyDown} tabIndex={-1}>
       <header className="app-header">
         <div className="brand">
           <span className="brand-mark" aria-hidden="true"><i /><i /><i /><i /></span>
@@ -42,6 +54,7 @@ export function AgileGrid() {
           <span className="status-mode"><i aria-hidden="true" />浏览模式 · 本页 {page.items.length} 个块</span>
         </div>
         <div className="header-actions">
+          <button className="edit-toggle" type="button" aria-pressed={editing} onClick={toggleEditing}>{editing ? "完成" : "编辑"}</button>
           <PageNavigation activePage={activePage} pageCount={layout.pages.length} onPageChange={setActivePage} />
           <span className="header-divider" aria-hidden="true" />
           <button className="overlay-toggle" type="button" aria-pressed={showOverlay} onClick={toggleOverlay}>
@@ -55,7 +68,7 @@ export function AgileGrid() {
           </button>
         </div>
       </header>
-      <GridViewport page={page} config={config} metrics={metrics} viewportRef={viewportRef} showOverlay={showOverlay} renderItem={renderDemo} />
+      <GridViewport page={page} config={config} metrics={metrics} viewportRef={viewportRef} showOverlay={showOverlay} renderItem={renderDemo} editing={editing} selectedItemId={selectedItemId} onSelect={selectItem} onBeginDrag={(id, offset) => beginDrag(id, activePage, offset)} onPreviewDrag={previewDrag} onCommitDrag={commitDrag} onCancelDrag={cancelDrag} drag={drag} />
     </div>
   );
 }

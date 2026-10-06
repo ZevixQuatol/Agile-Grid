@@ -87,3 +87,16 @@ export function pixelToGrid(x: number, y: number, metrics: GridMetrics): GridPoi
     y: Math.round(y / (metrics.cellHeight + metrics.gapY)),
   };
 }
+
+export function dragToGrid(
+  start: GridRect,
+  pointerOffset: GridPoint,
+  pointer: GridPoint,
+  metrics: GridMetrics,
+): GridPoint {
+  const snapped = pixelToGrid(pointer.x - pointerOffset.x, pointer.y - pointerOffset.y, metrics);
+  return {
+    x: Math.max(0, Math.min(snapped.x, metrics.columns - start.w)),
+    y: Math.max(0, Math.min(snapped.y, metrics.rows - start.h)),
+  };
+}

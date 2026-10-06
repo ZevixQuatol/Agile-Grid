@@ -1,4 +1,4 @@
-import { memo, type ReactNode } from "react";
+import { memo, type PointerEvent, type ReactNode } from "react";
 import { gridToPixel } from "@/core/grid/coordinates";
 import type { AgileGridItem, GridMetrics } from "@/core/grid/types";
 
@@ -6,14 +6,23 @@ interface Props {
   item: AgileGridItem;
   metrics: GridMetrics;
   renderItem: (item: AgileGridItem) => ReactNode;
+  editing: boolean;
+  selected: boolean;
+  onPointerDown: (event: PointerEvent<HTMLElement>, item: AgileGridItem) => void;
+  onPointerMove?: (event: PointerEvent<HTMLElement>) => void;
+  onPointerUp?: (event: PointerEvent<HTMLElement>) => void;
+  onPointerCancel?: () => void;
+  onSelect: (id: string) => void;
 }
 
-export const GridItem = memo(function GridItem({ item, metrics, renderItem }: Props) {
+export const GridItem = memo(function GridItem({ item, metrics, renderItem, editing, selected, onPointerDown, onSelect, onPointerMove, onPointerUp, onPointerCancel }: Props) {
   const rect = gridToPixel(item, metrics);
 
   return (
     <section
       className="grid-item"
+      data-selected={selected}
+      data-editing={editing}
       aria-label={item.id}
       data-item-id={item.id}
       data-type={item.type}
@@ -26,6 +35,13 @@ export const GridItem = memo(function GridItem({ item, metrics, renderItem }: Pr
         width: rect.width,
         height: rect.height,
       }}
+      onPointerDown={(event) => {
+        onSelect(item.id);
+        if (editing) onPointerDown(event, item);
+      }}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerCancel}
     >
       {renderItem(item)}
     </section>

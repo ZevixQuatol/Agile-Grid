@@ -3,6 +3,7 @@ import {
   fitsGrid,
   getGridMetrics,
   gridToPixel,
+  dragToGrid,
   pixelToGrid,
 } from "../../src/core/grid/coordinates";
 import type { GridConfig, GridRect } from "../../src/core/grid/types";
@@ -141,5 +142,13 @@ describe("pixel to grid", () => {
     expect(() => pixelToGrid(NaN, 0, metrics)).toThrow(RangeError);
     expect(() => pixelToGrid(0, Infinity, metrics)).toThrow(RangeError);
     expect(() => pixelToGrid(0, 0, getGridMetrics(1048, 0, config))).toThrow(RangeError);
+  });
+});
+
+describe("drag coordinates", () => {
+  it("keeps the pointer offset and clamps the whole widget to the page", () => {
+    expect(dragToGrid({ x: 2, y: 1, w: 3, h: 2 }, { x: 12, y: 6 }, { x: 400, y: 200 }, metrics)).toEqual({ x: 4, y: 2 });
+    expect(dragToGrid({ x: 2, y: 1, w: 3, h: 2 }, { x: 12, y: 6 }, { x: -100, y: -50 }, metrics)).toEqual({ x: 0, y: 0 });
+    expect(dragToGrid({ x: 2, y: 1, w: 3, h: 2 }, { x: 12, y: 6 }, { x: 2000, y: 2000 }, metrics)).toEqual({ x: 9, y: 4 });
   });
 });
