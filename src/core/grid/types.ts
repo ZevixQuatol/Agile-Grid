@@ -82,8 +82,10 @@ export interface AgileGridState {
 export interface DragSession {
   id: string;
   page: number;
+  bounds: GridBounds;
   start: GridRect;
   preview: GridRect;
+  previewLayout: GridLayout;
   pointerOffset: GridPoint;
   blocked: boolean;
 }

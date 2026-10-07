@@ -12,19 +12,19 @@ const layout: GridLayout = {
 };
 
 describe("Agile Grid editing store", () => {
-  it("keeps the last legal preview when a drag would overlap another item", () => {
+  it("allows overlap in the drag preview for collision resolution on commit", () => {
     const store = createAgileGridStore(layout);
     store.getState().toggleEditing();
-    expect(store.getState().beginDrag("a", 0, { x: 0, y: 0 })).toBe(true);
+    expect(store.getState().beginDrag("a", 0, { x: 0, y: 0 }, { columns: 4, rows: 2 })).toBe(true);
 
     store.getState().previewDrag({ x: 1, y: 0, w: 1, h: 1 });
 
     expect(store.getState().drag).toMatchObject({
-      preview: { x: 0, y: 0, w: 1, h: 1 },
-      blocked: true,
+      preview: { x: 1, y: 0, w: 1, h: 1 },
+      blocked: false,
     });
     store.getState().commitDrag();
-    expect(store.getState().state.layout.pages[0].items[0]).toMatchObject({ x: 0, y: 0 });
+    expect(store.getState().state.layout.pages[0].items[0]).toMatchObject({ x: 1, y: 0 });
   });
 
   it("only removes the selected page item in editing mode", () => {

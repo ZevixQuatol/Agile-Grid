@@ -17,7 +17,7 @@ interface Props {
   editing: boolean;
   selectedItemId?: string;
   onSelect: (id?: string) => void;
-  onBeginDrag: (id: string, offset: { x: number; y: number }) => boolean;
+  onBeginDrag: (id: string, offset: { x: number; y: number }, bounds: { columns: number; rows: number }) => boolean;
   onPreviewDrag: (rect: { x: number; y: number; w: number; h: number }) => void;
   onCommitDrag: () => void;
   onCancelDrag: () => void;
@@ -27,7 +27,8 @@ interface Props {
 
 export function GridViewport({ page, config, metrics, viewportRef, showOverlay, renderItem, editing, selectedItemId, onSelect, onBeginDrag, onPreviewDrag, onCommitDrag, onCancelDrag, onDelete, drag }: Props) {
   const hasCapacity = metrics !== null && metrics.cellWidth > 0 && metrics.rows > 0;
-  const outside = metrics ? page.items.filter((item) => !fitsGrid(item, metrics)) : [];
+  const renderPage = drag?.previewLayout.pages[drag.page] ?? page;
+  const outside = metrics ? renderPage.items.filter((item) => !fitsGrid(item, metrics)) : [];
   const canRender = hasCapacity && outside.length === 0;
   const dropPreview = drag && metrics && canRender ? gridToPixel(drag.preview, metrics) : null;
 
@@ -83,11 +84,11 @@ export function GridViewport({ page, config, metrics, viewportRef, showOverlay, 
           />
         )}
         {canRender ? (
-          page.items.map((item) => (
+          renderPage.items.map((item) => (
             <GridItem key={item.id} item={drag?.id === item.id ? { ...item, ...drag.preview } : item} metrics={metrics} renderItem={renderItem} editing={editing} selected={item.id === selectedItemId} dragging={drag?.id === item.id} blocked={drag?.id === item.id && drag.blocked} onDelete={onDelete} onSelect={onSelect} onPointerDown={(event, value) => {
               const bounds = event.currentTarget.getBoundingClientRect();
               const offset = { x: event.clientX - bounds.left, y: event.clientY - bounds.top };
-              if (editing) onBeginDrag(value.id, offset);
+              if (editing && metrics) onBeginDrag(value.id, offset, { columns: metrics.columns, rows: metrics.rows });
             }} />
           ))
         ) : (
