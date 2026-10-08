@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useStore } from "zustand";
 import type { AgileGridItem } from "@/core/grid/types";
 import { createAgileGridStore } from "@/stores/agileGridStore";
@@ -36,7 +36,9 @@ export function AgileGrid() {
   const previewResize = useStore(store, (value) => value.previewResize);
   const commitResize = useStore(store, (value) => value.commitResize);
   const cancelResize = useStore(store, (value) => value.cancelResize);
+  const addItem = useStore(store, (value) => value.addItem);
   const removeItem = useStore(store, (value) => value.removeItem);
+  const adaptLayout = useStore(store, (value) => value.adaptLayout);
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === "Escape") {
       cancelDrag();
@@ -46,6 +48,23 @@ export function AgileGrid() {
   const viewportRef = useRef<HTMLDivElement>(null);
   const metrics = useGridMetrics(viewportRef, config);
   const page = layout.pages[activePage];
+  useEffect(() => {
+    adaptLayout(metrics && metrics.cellWidth > 0 && metrics.rows > 0
+      ? { columns: metrics.columns, rows: metrics.rows }
+      : { columns: 0, rows: 0 });
+  }, [adaptLayout, metrics]);
+  const handleAddItem = () => {
+    if (!metrics || metrics.cellWidth <= 0 || metrics.rows < 1) return;
+    const ids = new Set(layout.pages.flatMap((value) => value.items.map((item) => item.id)));
+    let suffix = 1;
+    while (ids.has(`widget-${suffix}`)) suffix += 1;
+    addItem({ id: `widget-${suffix}`, type: "small", x: 0, y: 0, w: 2, h: 1 }, { columns: metrics.columns, rows: metrics.rows });
+  };
+  const handleDeleteItem = (id: string) => {
+    if (metrics && metrics.cellWidth > 0 && metrics.rows > 0) {
+      removeItem(id, { columns: metrics.columns, rows: metrics.rows });
+    }
+  };
 
   return (
     <div className="agile-grid-shell" onKeyDown={handleKeyDown} tabIndex={-1}>
@@ -97,6 +116,18 @@ export function AgileGrid() {
               <path d="m13.5 6.5 4 4" />
             </svg>
           </button>
+          {editing && <button
+            className="icon-button add-item"
+            type="button"
+            aria-label="新增 Widget"
+            title="新增 Widget"
+            disabled={!metrics || metrics.cellWidth <= 0 || metrics.rows < 1}
+            onClick={handleAddItem}
+          >
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+          </button>}
           <PageNavigation activePage={activePage} pageCount={layout.pages.length} onPageChange={setActivePage} />
           <button
             className="icon-button overlay-toggle"
@@ -116,7 +147,7 @@ export function AgileGrid() {
           </div>
         </div>
       </header>
-      <GridViewport page={page} config={config} metrics={metrics} viewportRef={viewportRef} showOverlay={showOverlay} renderItem={renderDemo} editing={editing} selectedItemId={selectedItemId} onSelect={selectItem} onBeginDrag={(id, offset, bounds) => beginDrag(id, activePage, offset, bounds)} onPreviewDrag={previewDrag} onCommitDrag={commitDrag} onCancelDrag={cancelDrag} onBeginResize={(id, handle, pointerStart, bounds) => beginResize(id, activePage, handle, pointerStart, bounds)} onPreviewResize={previewResize} onCommitResize={commitResize} onCancelResize={cancelResize} onDelete={removeItem} drag={drag} resize={resize} />
+      <GridViewport page={page} config={config} metrics={metrics} viewportRef={viewportRef} showOverlay={showOverlay} renderItem={renderDemo} editing={editing} selectedItemId={selectedItemId} onSelect={selectItem} onBeginDrag={(id, offset, bounds) => beginDrag(id, activePage, offset, bounds)} onPreviewDrag={previewDrag} onCommitDrag={commitDrag} onCancelDrag={cancelDrag} onBeginResize={(id, handle, pointerStart, bounds) => beginResize(id, activePage, handle, pointerStart, bounds)} onPreviewResize={previewResize} onCommitResize={commitResize} onCancelResize={cancelResize} onDelete={handleDeleteItem} drag={drag} resize={resize} />
     </div>
   );
 }

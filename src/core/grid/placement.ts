@@ -7,6 +7,15 @@ export interface PlacementResult {
   success: boolean;
 }
 
+export interface LayoutResult {
+  pages: GridPage[];
+  success: boolean;
+}
+
+function validBounds(bounds: GridBounds): boolean {
+  return Number.isInteger(bounds.columns) && bounds.columns > 0 && Number.isInteger(bounds.rows) && bounds.rows > 0;
+}
+
 function free(rect: GridRect, items: AgileGridItem[], bounds: GridBounds): boolean {
   return fitsGrid(rect, bounds) && items.every((item) => !rectsOverlap(rect, item));
 }
@@ -25,6 +34,89 @@ interface GridPoint { x: number; y: number }
 
 function canFitSize(item: GridRect, bounds: GridBounds): boolean {
   return fitsGrid({ x: 0, y: 0, w: item.w, h: item.h }, bounds);
+}
+
+function fitItem(item: AgileGridItem, bounds: GridBounds): AgileGridItem | null {
+  if (!validBounds(bounds)) return null;
+  const minW = Math.max(1, Math.min(Math.ceil(item.minW ?? 1), bounds.columns));
+  const minH = Math.max(1, Math.min(Math.ceil(item.minH ?? 1), bounds.rows));
+  const maxW = Math.max(1, Math.min(Math.floor(item.maxW ?? bounds.columns), bounds.columns));
+  const maxH = Math.max(1, Math.min(Math.floor(item.maxH ?? bounds.rows), bounds.rows));
+  const effectiveMinW = Math.min(minW, maxW);
+  const effectiveMinH = Math.min(minH, maxH);
+  const w = Math.max(effectiveMinW, Math.min(Math.floor(item.w), maxW));
+  const h = Math.max(effectiveMinH, Math.min(Math.floor(item.h), maxH));
+  return { ...item, w, h };
+}
+
+function placeForward(item: AgileGridItem, pages: GridPage[], bounds: GridBounds, startPage = 0): number | null {
+  for (let page = startPage; page < pages.length; page += 1) {
+    const position = firstFit(item, pages[page].items, bounds);
+    if (!position) continue;
+    pages[page].items.push({ ...item, ...position });
+    return page;
+  }
+
+  pages.push({ items: [] });
+  const position = firstFit(item, [], bounds);
+  if (!position) return null;
+  pages[pages.length - 1].items.push({ ...item, ...position });
+  return pages.length - 1;
+}
+
+function trimTrailingPages(pages: GridPage[]): GridPage[] {
+  while (pages.length > 1 && pages[pages.length - 1].items.length === 0) pages.pop();
+  return pages.length ? pages : [{ items: [] }];
+}
+
+function orderedItems(pages: GridPage[]) {
+  return pages.flatMap((page, pageIndex) => page.items.map((item) => ({ pageIndex, item })))
+    .sort((a, b) => a.pageIndex - b.pageIndex || a.item.y - b.item.y || a.item.x - b.item.x || a.item.id.localeCompare(b.item.id));
+}
+
+export function addGridItem(pages: GridPage[], item: AgileGridItem, bounds: GridBounds): PlacementResult {
+  if (!validBounds(bounds) || pages.some((page) => page.items.some((candidate) => candidate.id === item.id))) {
+    return { pages, placed: item, success: false };
+  }
+  const fitted = fitItem(item, bounds);
+  if (!fitted) return { pages, placed: item, success: false };
+
+  const nextPages = pages.map((page) => ({ items: page.items.map((candidate) => ({ ...candidate })) }));
+  if (!nextPages.length) nextPages.push({ items: [] });
+  const pageIndex = placeForward(fitted, nextPages, bounds);
+  if (pageIndex === null) return { pages, placed: item, success: false };
+  const placed = nextPages[pageIndex].items.find((candidate) => candidate.id === item.id)!;
+  return { pages: trimTrailingPages(nextPages), placed, success: true };
+}
+
+export function compactLayout(pages: GridPage[], bounds: GridBounds): LayoutResult {
+  if (!validBounds(bounds)) return { pages, success: false };
+  const nextPages: GridPage[] = [{ items: [] }];
+  for (const { item } of orderedItems(pages)) {
+    const fitted = fitItem(item, bounds);
+    if (!fitted || placeForward(fitted, nextPages, bounds) === null) return { pages, success: false };
+  }
+  return { pages: trimTrailingPages(nextPages), success: true };
+}
+
+export function adaptLayoutToBounds(pages: GridPage[], bounds: GridBounds): LayoutResult {
+  if (!validBounds(bounds)) return { pages, success: false };
+  const nextPages = pages.map(() => ({ items: [] as AgileGridItem[] }));
+  if (!nextPages.length) nextPages.push({ items: [] });
+
+  for (const { pageIndex, item } of orderedItems(pages)) {
+    const fitted = fitItem(item, bounds);
+    if (!fitted) return { pages, success: false };
+    const preferredPage = nextPages[Math.min(pageIndex, nextPages.length - 1)];
+    const original = { x: item.x, y: item.y, w: fitted.w, h: fitted.h };
+    if (free(original, preferredPage.items, bounds)) {
+      preferredPage.items.push({ ...fitted, ...original });
+      continue;
+    }
+    if (placeForward(fitted, nextPages, bounds, pageIndex) === null) return { pages, success: false };
+  }
+
+  return { pages: trimTrailingPages(nextPages), success: true };
 }
 
 export function reflowDraggedItem(
