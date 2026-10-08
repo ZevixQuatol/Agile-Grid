@@ -44,12 +44,6 @@ export function AgileGrid() {
   const removeItem = useStore(store, (value) => value.removeItem);
   const adaptLayout = useStore(store, (value) => value.adaptLayout);
   const arrangeItems = useStore(store, (value) => value.arrangeItems);
-  const handleKeyDown = (event: React.KeyboardEvent) => {
-    if (event.key === "Escape") {
-      cancelDrag();
-      cancelResize();
-    }
-  };
   const viewportRef = useRef<HTMLDivElement>(null);
   const metrics = useGridMetrics(viewportRef, config);
   const page = layout.pages[activePage];
@@ -75,6 +69,21 @@ export function AgileGrid() {
       arrangeItems(scope, { columns: metrics.columns, rows: metrics.rows });
     }
   };
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!editing || event.defaultPrevented || event.repeat || event.nativeEvent.isComposing || event.keyCode === 229 || event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) return;
+    const target = event.target;
+    if (target instanceof HTMLElement && (target.isContentEditable || target.closest("input, textarea, select, [role='textbox'], [role='combobox']"))) return;
+    if (event.currentTarget.querySelector("[popover]:popover-open")) return;
+    if (event.key === "Escape" && (drag || resize || selectedItemId)) {
+      event.preventDefault();
+      cancelDrag();
+      cancelResize();
+      selectItem(undefined);
+    } else if (event.key === "Delete" && selectedItemId && !drag && !resize && metrics && metrics.cellWidth > 0 && metrics.rows > 0) {
+      event.preventDefault();
+      handleDeleteItem(selectedItemId);
+    }
+  };
 
   const editButton = <button
             className="icon-button edit-toggle"
@@ -94,7 +103,7 @@ export function AgileGrid() {
             type="button"
             aria-label="新增 Widget"
             title="新增 Widget"
-            disabled={!metrics || metrics.cellWidth <= 0 || metrics.rows < 1}
+            disabled={!metrics || metrics.cellWidth <= 0 || metrics.rows < 1 || !!drag || !!resize}
             onClick={handleAddItem}
           >
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">

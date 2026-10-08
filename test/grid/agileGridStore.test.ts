@@ -201,3 +201,72 @@ describe("Dock configuration", () => {
     expect(store.getState().state.layout.pages.map((page) => page.items.map((item) => item.id))).toEqual([["a"], ["b"]]);
   });
 });
+
+describe("editing permissions and cancellation", () => {
+  const bounds = { columns: 4, rows: 2 };
+
+  it("blocks every layout edit and selection in browse mode", () => {
+    const store = createAgileGridStore(layout);
+    const api = store.getState();
+    api.selectItem("a");
+    expect(api.beginDrag("a", 0, { x: 0, y: 0 }, bounds)).toBe(false);
+    expect(api.beginResize("a", 0, "right", { x: 0, y: 0 }, bounds)).toBe(false);
+    expect(api.addItem({ id: "new", type: "small", x: 0, y: 0, w: 1, h: 1 }, bounds)).toBe(false);
+    api.removeItem("a", bounds);
+    api.arrangeItems("all", bounds);
+    api.setDockSize(80);
+    expect(store.getState().state.layout).toEqual(layout);
+    expect(store.getState().state.selectedItemId).toBeUndefined();
+    expect(store.getState().state.dock.size).toBe(48);
+  });
+
+  it("honors item drag/resize flags and rejects invalid capacity without locking passive reflow", () => {
+    const store = createAgileGridStore({ pages: [{ items: layout.pages[0].items.map((item) => ({ ...item, draggable: false, resizable: false })) }] });
+    store.getState().toggleEditing();
+    expect(store.getState().beginDrag("a", 0, { x: 0, y: 0 }, bounds)).toBe(false);
+    expect(store.getState().beginResize("a", 0, "right", { x: 0, y: 0 }, bounds)).toBe(false);
+    store.getState().adaptLayout({ columns: 1, rows: 1 });
+    expect(store.getState().state.layout.pages.map((page) => page.items.map((item) => item.id))).toEqual([["a"], ["b"]]);
+    const enabled = createAgileGridStore(layout);
+    enabled.getState().toggleEditing();
+    expect(enabled.getState().beginDrag("a", 0, { x: 0, y: 0 }, { columns: 0, rows: 0 })).toBe(false);
+    expect(enabled.getState().beginResize("a", 0, "corner", { x: 0, y: 0 }, { columns: 4, rows: 0 })).toBe(false);
+  });
+
+  it("clears selection on page changes and ignores ids outside the active page", () => {
+    const store = createAgileGridStore({ pages: [layout.pages[0], { items: [{ id: "c", type: "small", x: 0, y: 0, w: 1, h: 1 }] }] });
+    store.getState().toggleEditing();
+    store.getState().selectItem("a");
+    store.getState().selectItem("c");
+    expect(store.getState().state.selectedItemId).toBe("a");
+    store.getState().setActivePage(1);
+    expect(store.getState().state.selectedItemId).toBeUndefined();
+    store.getState().selectItem("c");
+    expect(store.getState().state.selectedItemId).toBe("c");
+  });
+
+  it.each(["drag", "resize"] as const)("keeps a %s transaction isolated and restores all pages on cancellation or mode exit", (kind) => {
+    const store = createAgileGridStore(layout);
+    store.getState().toggleEditing();
+    if (kind === "drag") {
+      store.getState().beginDrag("a", 0, { x: 0, y: 0 }, bounds);
+      store.getState().previewDrag({ x: 1, y: 0, w: 1, h: 1 });
+    } else {
+      store.getState().beginResize("a", 0, "right", { x: 0, y: 0 }, bounds);
+      store.getState().previewResize({ x: 3, y: 0 });
+    }
+    const transaction = store.getState()[kind];
+    expect(store.getState().beginDrag("b", 0, { x: 0, y: 0 }, bounds)).toBe(false);
+    expect(store.getState().beginResize("b", 0, "corner", { x: 0, y: 0 }, bounds)).toBe(false);
+    expect(store.getState()[kind]).toBe(transaction);
+    store.getState().removeItem("a", bounds);
+    expect(store.getState().state.layout).toEqual(layout);
+    store.getState().toggleEditing();
+    store.getState().commitDrag();
+    store.getState().commitResize();
+    expect(store.getState().state.layout).toEqual(layout);
+    expect(store.getState().drag).toBeNull();
+    expect(store.getState().resize).toBeNull();
+    expect(store.getState().state.selectedItemId).toBeUndefined();
+  });
+});

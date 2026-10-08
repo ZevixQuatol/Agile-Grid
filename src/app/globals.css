@@ -68,6 +68,8 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .grid-item[data-editing="true"]:active, .grid-item[data-selected="true"] { cursor: grabbing; }
 .grid-item[data-selected="true"] { outline: 2px solid var(--accent); outline-offset: 2px; }
 .grid-item[data-editing="true"] { user-select: none; }
+.grid-item[data-editing="true"][data-draggable="false"] { cursor: default; }
+.grid-item-content { height: 100%; }
 .grid-item[data-blocked="true"] { outline-color: #c45757; }
 .item-delete { position: absolute; z-index: 2; top: 5px; left: 5px; width: 22px; height: 22px; padding: 0; border: 0; border-radius: 50%; background: #c45757; color: #fff; cursor: pointer; font-size: 18px; line-height: 20px; font-weight: 700; }
 .item-delete:hover { background: #a33e3e; }

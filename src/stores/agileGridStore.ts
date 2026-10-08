@@ -2,6 +2,7 @@ import { createStore } from "zustand/vanilla";
 import demoLayout from "@/data/demo-layout.json";
 import { addGridItem, adaptLayoutToBounds, compactLayout, compactPage, reflowDraggedItem } from "@/core/grid/placement";
 import { resizeRect } from "@/core/grid/resize";
+import { fitsGrid } from "@/core/grid/coordinates";
 import type { AgileGridItem, AgileGridState, DockPosition, DragSession, GridBounds, GridConfig, GridLayout, GridRect, ResizeHandle, ResizeSession } from "@/core/grid/types";
 
 export const dockSizeRange = { min: 40, max: 160 };
@@ -67,6 +68,7 @@ export function createAgileGridStore(layout: GridLayout = demoLayout) {
         state: {
           ...state,
           activePage: Math.max(0, Math.min(page, state.layout.pages.length - 1)),
+          selectedItemId: undefined,
         },
         drag: null,
         resize: null,
@@ -82,13 +84,16 @@ export function createAgileGridStore(layout: GridLayout = demoLayout) {
       if (!state.editing || !Number.isInteger(size) || size < dockSizeRange.min || size > dockSizeRange.max || size === state.dock.size) return {};
       return { state: { ...state, dock: { ...state.dock, size }, selectedItemId: undefined }, drag: null, resize: null };
     }),
-    selectItem: (id) => set(({ state }) => ({ state: { ...state, selectedItemId: id } })),
+    selectItem: (id) => set(({ state }) => {
+      if (!state.editing || (id !== undefined && !state.layout.pages[state.activePage].items.some((item) => item.id === id))) return {};
+      return { state: { ...state, selectedItemId: id } };
+    }),
     beginDrag: (id, page, pointerOffset, bounds) => {
       let started = false;
-      set(({ state }) => {
-        if (!state.editing || page !== state.activePage) return {};
+      set(({ state, drag, resize }) => {
+        if (!state.editing || drag || resize || page !== state.activePage) return {};
         const item = state.layout.pages[page]?.items.find((candidate) => candidate.id === id);
-        if (!item) return {};
+        if (!item || item.draggable === false || !fitsGrid(item, bounds)) return {};
         started = true;
         return { state: { ...state, selectedItemId: id }, resize: null, drag: { id, page, bounds, start: { x: item.x, y: item.y, w: item.w, h: item.h }, preview: { x: item.x, y: item.y, w: item.w, h: item.h }, previewLayout: structuredClone(state.layout), pointerOffset, blocked: false } };
       });
@@ -110,10 +115,10 @@ export function createAgileGridStore(layout: GridLayout = demoLayout) {
     cancelDrag: () => set(({ drag }) => drag ? { drag: null } : {}),
     beginResize: (id, page, handle, pointerStart, bounds) => {
       let started = false;
-      set(({ state }) => {
-        if (!state.editing || page !== state.activePage) return {};
+      set(({ state, drag, resize }) => {
+        if (!state.editing || drag || resize || page !== state.activePage) return {};
         const item = state.layout.pages[page]?.items.find((candidate) => candidate.id === id);
-        if (!item) return {};
+        if (!item || item.resizable === false || !fitsGrid(item, bounds)) return {};
         started = true;
         const start = { x: item.x, y: item.y, w: item.w, h: item.h };
         return { state: { ...state, selectedItemId: id }, drag: null, resize: { id, page, bounds, handle, start, preview: start, previewLayout: structuredClone(state.layout), pointerStart, blocked: false } };
