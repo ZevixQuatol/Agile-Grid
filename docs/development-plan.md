@@ -10,7 +10,7 @@
 | 顺序 | 任务 | 交付与完成标准 |
 |---|---|---|
 | 001 ✓ | 工程与基础分页渲染 | 已完成；Next.js、strict TS、模型、测量、坐标换算、Demo JSON、固定网格、页导航；给定合法数据准确渲染且无滚动。见 [验证报告](./task001-validation.md) |
-| 002 | 编辑与 Drag | 编辑权限、整块 Pointer 拖拽、吸附、选择、Drag Layer、Placeholder、边界和完整取消 |
+| 002 ✓ | 编辑与 Drag | 已完成；编辑权限、整块 Pointer 拖拽、吸附、选择、Drag Layer、Placeholder、边界和完整取消 |
 | 003 ✓ | 碰撞与跨页挤让 | 已完成；拖拽事务接入 AABB 碰撞、稳定挤让、跨页新建和失败回滚 |
 | 004 ✓ | Resize | 已完成；右 / 下 / 右下手柄、整数吸附、min/max、容量约束、挤让和取消 |
 | 005 | Add / Remove | 矩形 first-fit、自动新页、删除、单项自动缩小与尾空页维护 |
