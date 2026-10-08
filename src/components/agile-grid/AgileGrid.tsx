@@ -42,39 +42,40 @@ export function AgileGrid() {
   return (
     <div className="agile-grid-shell" onKeyDown={handleKeyDown} tabIndex={-1}>
       <header className="app-header">
-        <div className="brand">
-          <span className="brand-mark" aria-hidden="true"><i /><i /><i /><i /></span>
-          <button
-            className="icon-button about-button"
-            type="button"
-            aria-label="关于 Agile Grid 灵巧网格"
-            aria-expanded={aboutOpen}
-            title="关于 Agile Grid / 灵巧网格"
-            onClick={() => setAboutOpen((open) => !open)}
-          >
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <circle cx="12" cy="12" r="8.5" />
-              <path d="M12 10.5v5" />
-              <path d="M12 7.5h.01" />
-            </svg>
-          </button>
-          {aboutOpen && (
-            <div className="about-popover" role="dialog" aria-label="关于 Agile Grid">
-              <strong>Agile Grid</strong>
-              <span>灵巧网格</span>
-            </div>
-          )}
-        </div>
-        <div className="grid-status" role="group" aria-label="网格信息">
-          <div className="metric-group">
-            <span><b>{config.columns}</b> 列</span>
-            <span><b>{metrics?.rows ?? "—"}</b> 行</span>
-            <span className="metric-secondary">Cell <b>{metrics ? metrics.cellWidth.toFixed(2) : "—"}</b> × <b>{config.rowHeight}</b> px</span>
-            <span className="metric-secondary">Gap <b>{config.gapX}</b> / <b>{config.gapY}</b> px</span>
+        <div className="header-controls">
+          <div className="brand">
+            <span className="brand-mark" aria-hidden="true"><i /><i /><i /><i /></span>
+            <button
+              className="icon-button about-button"
+              type="button"
+              aria-label="关于 Agile Grid 灵巧网格"
+              aria-expanded={aboutOpen}
+              title="关于 Agile Grid / 灵巧网格"
+              onClick={() => setAboutOpen((open) => !open)}
+            >
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="12" cy="12" r="8.5" />
+                <path d="M12 10.5v5" />
+                <path d="M12 7.5h.01" />
+              </svg>
+            </button>
+            {aboutOpen && (
+              <div className="about-popover" role="dialog" aria-label="关于 Agile Grid">
+                <strong>Agile Grid</strong>
+                <span>灵巧网格</span>
+                <div className="grid-status" role="group" aria-label="网格信息">
+                  <div className="metric-group">
+                    <span><b>{config.columns}</b> 列</span>
+                    <span><b>{metrics?.rows ?? "—"}</b> 行</span>
+                    <span className="metric-secondary">Cell <b>{metrics ? metrics.cellWidth.toFixed(2) : "—"}</b> × <b>{config.rowHeight}</b> px</span>
+                    <span className="metric-secondary">Gap <b>{config.gapX}</b> / <b>{config.gapY}</b> px</span>
+                  </div>
+                  <span className="status-mode"><i aria-hidden="true" />浏览模式 · 本页 {page.items.length} 个块</span>
+                </div>
+              </div>
+            )}
           </div>
-          <span className="status-mode"><i aria-hidden="true" />浏览模式 · 本页 {page.items.length} 个块</span>
-        </div>
-        <div className="header-actions">
+          <div className="header-actions">
           <button
             className="icon-button edit-toggle"
             type="button"
@@ -104,6 +105,7 @@ export function AgileGrid() {
               <rect x="14" y="14" width="6" height="6" rx="1" />
             </svg>
           </button>
+          </div>
         </div>
       </header>
       <GridViewport page={page} config={config} metrics={metrics} viewportRef={viewportRef} showOverlay={showOverlay} renderItem={renderDemo} editing={editing} selectedItemId={selectedItemId} onSelect={selectItem} onBeginDrag={(id, offset, bounds) => beginDrag(id, activePage, offset, bounds)} onPreviewDrag={previewDrag} onCommitDrag={commitDrag} onCancelDrag={cancelDrag} onDelete={removeItem} drag={drag} />

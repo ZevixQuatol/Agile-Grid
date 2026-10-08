@@ -13,15 +13,16 @@ button { font: inherit; }
 button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
 .agile-grid-shell { height: 100dvh; width: 100%; display: grid; grid-template-rows: 48px minmax(0, 1fr); overflow: hidden; }
-.app-header { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 16px; padding: 0 24px; background: white; border-bottom: 1px solid var(--line); min-width: 0; }
-.brand { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.app-header { display: flex; align-items: center; padding: 0 24px; background: white; border-bottom: 1px solid var(--line); min-width: 0; }
+.header-controls { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.brand { position: relative; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 .brand-mark { display: grid; grid-template-columns: repeat(2, 6px); gap: 3px; transform: rotate(-4deg); }
 .brand-mark i { width: 6px; height: 6px; background: var(--accent); border-radius: 1px; }
 .brand-mark i:nth-child(2) { opacity: .45; }
 .brand-mark i:nth-child(3) { opacity: .65; }
-.about-popover { position: absolute; z-index: 5; top: 42px; left: 24px; display: flex; flex-direction: column; gap: 3px; min-width: 148px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 7px; background: white; box-shadow: 0 8px 20px rgba(32, 39, 48, .12); color: var(--ink); font-size: 12px; }
+.about-popover { position: absolute; z-index: 5; top: calc(100% + 8px); left: 0; display: flex; flex-direction: column; gap: 3px; min-width: 230px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 7px; background: white; box-shadow: 0 8px 20px rgba(32, 39, 48, .12); color: var(--ink); font-size: 12px; }
 .about-popover span { color: var(--muted); font-size: 11px; }
-.header-actions { display: flex; align-items: center; gap: 16px; min-width: 0; }
+.header-actions { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .header-divider { height: 18px; width: 1px; background: var(--line); }
 .page-navigation { display: flex; align-items: center; gap: 10px; }
 .page-count { min-width: 80px; text-align: center; font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; color: #46505f; }
@@ -63,8 +64,9 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .widget-type { font-size: 10px; line-height: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .9px; white-space: nowrap; }
 .widget-size { font-size: 25px; line-height: 28px; font-weight: 500; letter-spacing: -1px; white-space: nowrap; }
 .widget-coordinate { font: 10px/12px Consolas, monospace; opacity: .7; white-space: nowrap; }
-.grid-status { display: flex; align-items: center; justify-content: center; gap: 20px; min-width: 0; color: var(--muted); font-size: 11px; overflow: hidden; }
+.grid-status { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; min-width: 0; margin-top: 8px; color: var(--muted); font-size: 11px; }
 .metric-group { display: flex; gap: 14px; align-items: center; white-space: nowrap; }
+.about-popover .metric-group { flex-wrap: wrap; gap: 6px 10px; white-space: normal; }
 .metric-group b { font-weight: 500; color: #46515e; font-variant-numeric: tabular-nums; }
 .status-mode { display: flex; gap: 6px; align-items: center; white-space: nowrap; }
 .status-mode i { width: 5px; height: 5px; border-radius: 50%; background: #8da994; }
@@ -75,18 +77,13 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .message-detail { font-size: 11px; color: #a17b42; }
 
 @media (max-width: 1100px) {
-  .metric-secondary { display: none; }
-  .grid-status { gap: 12px; }
+  .about-popover { min-width: 220px; }
 }
 
 @media (max-width: 700px) {
-  .app-header { grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: 28px 16px; padding: 0 8px; column-gap: 8px; row-gap: 0; }
-  .brand { grid-column: 1; grid-row: 1; }
-  .about-popover { top: 42px; left: 8px; }
-  .grid-status { grid-column: 1 / -1; grid-row: 2; font-size: 10px; }
-  .header-actions { grid-column: 2; grid-row: 1; }
-  .header-actions { gap: 8px; }
+  .app-header { padding: 0 8px; }
+  .header-controls { gap: 6px; }
+  .header-actions { gap: 4px; }
   .page-count { min-width: 68px; }
   .metric-group { gap: 10px; }
-  .status-mode { font-size: 10px; }
 }
