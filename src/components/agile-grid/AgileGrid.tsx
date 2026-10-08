@@ -39,6 +39,7 @@ export function AgileGrid() {
   const addItem = useStore(store, (value) => value.addItem);
   const removeItem = useStore(store, (value) => value.removeItem);
   const adaptLayout = useStore(store, (value) => value.adaptLayout);
+  const arrangeItems = useStore(store, (value) => value.arrangeItems);
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === "Escape") {
       cancelDrag();
@@ -63,6 +64,11 @@ export function AgileGrid() {
   const handleDeleteItem = (id: string) => {
     if (metrics && metrics.cellWidth > 0 && metrics.rows > 0) {
       removeItem(id, { columns: metrics.columns, rows: metrics.rows });
+    }
+  };
+  const handleArrangeItems = (scope: "page" | "all") => {
+    if (metrics && metrics.cellWidth > 0 && metrics.rows > 0) {
+      arrangeItems(scope, { columns: metrics.columns, rows: metrics.rows });
     }
   };
 
@@ -144,6 +150,34 @@ export function AgileGrid() {
               <rect x="14" y="14" width="6" height="6" rx="1" />
             </svg>
           </button>
+          {editing && <>
+            <button
+              className="icon-button"
+              type="button"
+              aria-label="本页补位"
+              title="本页补位"
+              disabled={!metrics || metrics.cellWidth <= 0 || metrics.rows < 1 || !!drag || !!resize}
+              onClick={() => handleArrangeItems("page")}
+            >
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M4 4h16M12 20V8m-4 4 4-4 4 4" />
+              </svg>
+            </button>
+            <button
+              className="icon-button"
+              type="button"
+              aria-label="自动排布全部页面"
+              title="自动排布全部页面"
+              disabled={!metrics || metrics.cellWidth <= 0 || metrics.rows < 1 || !!drag || !!resize}
+              onClick={() => handleArrangeItems("all")}
+            >
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <rect x="3" y="3" width="7" height="7" rx="1" />
+                <rect x="14" y="3" width="7" height="7" rx="1" />
+                <path d="M3 17h18m-4-4 4 4-4 4" />
+              </svg>
+            </button>
+          </>}
           </div>
         </div>
       </header>

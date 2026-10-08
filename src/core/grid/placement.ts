@@ -99,6 +99,24 @@ export function compactLayout(pages: GridPage[], bounds: GridBounds): LayoutResu
   return { pages: trimTrailingPages(nextPages), success: true };
 }
 
+export function compactPage(pages: GridPage[], pageIndex: number, bounds: GridBounds): LayoutResult {
+  const page = pages[pageIndex];
+  if (!validBounds(bounds) || !page || page.items.some((item) => !fitsGrid(item, bounds))) return { pages, success: false };
+  const items = page.items.map((item) => ({ ...item }));
+  for (const { item } of orderedItems([{ items }])) {
+    const others = items.filter((candidate) => candidate.id !== item.id);
+    let placed = false;
+    for (let y = 0; y <= item.y; y += 1) {
+      if (!free({ ...item, y }, others, bounds)) continue;
+      item.y = y;
+      placed = true;
+      break;
+    }
+    if (!placed) return { pages, success: false };
+  }
+  return { pages: pages.map((value, index) => index === pageIndex ? { items } : value), success: true };
+}
+
 export function adaptLayoutToBounds(pages: GridPage[], bounds: GridBounds): LayoutResult {
   if (!validBounds(bounds)) return { pages, success: false };
   const nextPages = pages.map(() => ({ items: [] as AgileGridItem[] }));

@@ -1,6 +1,6 @@
 import { createStore } from "zustand/vanilla";
 import demoLayout from "@/data/demo-layout.json";
-import { addGridItem, adaptLayoutToBounds, compactLayout, reflowDraggedItem } from "@/core/grid/placement";
+import { addGridItem, adaptLayoutToBounds, compactLayout, compactPage, reflowDraggedItem } from "@/core/grid/placement";
 import { resizeRect } from "@/core/grid/resize";
 import type { AgileGridItem, AgileGridState, DragSession, GridBounds, GridConfig, GridLayout, GridRect, ResizeHandle, ResizeSession } from "@/core/grid/types";
 
@@ -29,6 +29,7 @@ interface AgileGridStore {
   addItem: (item: AgileGridItem, bounds: GridBounds) => boolean;
   removeItem: (id: string, bounds: GridBounds) => void;
   adaptLayout: (bounds: GridBounds) => void;
+  arrangeItems: (scope: "page" | "all", bounds: GridBounds) => void;
   drag: DragSession | null;
   resize: ResizeSession | null;
 }
@@ -141,6 +142,14 @@ export function createAgileGridStore(layout: GridLayout = demoLayout) {
       const result = compactLayout(remaining, bounds);
       if (!result.success) return {};
       return { state: { ...state, layout: { pages: result.pages }, activePage: Math.min(state.activePage, result.pages.length - 1), selectedItemId: state.selectedItemId === id ? undefined : state.selectedItemId } };
+    }),
+    arrangeItems: (scope, bounds) => set(({ state, drag, resize }) => {
+      if (!state.editing || drag || resize) return {};
+      const result = scope === "page"
+        ? compactPage(state.layout.pages, state.activePage, bounds)
+        : compactLayout(state.layout.pages, bounds);
+      if (!result.success) return {};
+      return { state: { ...state, layout: { pages: result.pages }, activePage: Math.min(state.activePage, result.pages.length - 1), selectedItemId: undefined } };
     }),
     adaptLayout: (bounds) => set(({ state, drag, resize }) => {
       const result = adaptLayoutToBounds(state.layout.pages, bounds);

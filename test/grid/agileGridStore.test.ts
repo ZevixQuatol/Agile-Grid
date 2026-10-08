@@ -94,3 +94,59 @@ describe("Agile Grid editing store", () => {
     ]);
   });
 });
+
+describe("arrangement permissions and commits", () => {
+  const scattered: GridLayout = { pages: [
+    { items: [{ id: "first", type: "small", x: 2, y: 2, w: 1, h: 1 }] },
+    { items: [{ id: "second", type: "small", x: 3, y: 2, w: 1, h: 1 }] },
+  ] };
+  const bounds = { columns: 4, rows: 4 };
+
+  it("compacts the active page and clears selection without moving other pages", () => {
+    const store = createAgileGridStore(scattered);
+    store.getState().toggleEditing();
+    store.getState().setActivePage(1);
+    store.getState().selectItem("second");
+    store.getState().arrangeItems("page", bounds);
+
+    expect(store.getState().state.layout.pages[0]).toEqual(scattered.pages[0]);
+    expect(store.getState().state.layout.pages[1].items[0]).toMatchObject({ id: "second", x: 3, y: 0, w: 1, h: 1 });
+    expect(store.getState().state.activePage).toBe(1);
+    expect(store.getState().state.selectedItemId).toBeUndefined();
+  });
+
+  it("arranges all pages, trims empty pages and clamps the active page", () => {
+    const store = createAgileGridStore(scattered);
+    store.getState().toggleEditing();
+    store.getState().setActivePage(1);
+    store.getState().arrangeItems("all", bounds);
+
+    expect(store.getState().state.layout.pages).toEqual([{ items: [
+      { ...scattered.pages[0].items[0], x: 0, y: 0 },
+      { ...scattered.pages[1].items[0], x: 1, y: 0 },
+    ] }]);
+    expect(store.getState().state.activePage).toBe(0);
+  });
+
+  it.each(["page", "all"] as const)("blocks %s arrangement in browse mode, zero capacity and active pointer transactions", (scope) => {
+    const store = createAgileGridStore(scattered);
+    store.getState().arrangeItems(scope, bounds);
+    expect(store.getState().state.layout).toEqual(scattered);
+    store.getState().toggleEditing();
+    store.getState().arrangeItems(scope, { columns: 4, rows: 0 });
+    expect(store.getState().state.layout).toEqual(scattered);
+
+    store.getState().beginDrag("first", 0, { x: 0, y: 0 }, bounds);
+    const drag = store.getState().drag;
+    store.getState().arrangeItems(scope, bounds);
+    expect(store.getState().state.layout).toEqual(scattered);
+    expect(store.getState().drag).toBe(drag);
+    store.getState().cancelDrag();
+
+    store.getState().beginResize("first", 0, "corner", { x: 0, y: 0 }, bounds);
+    const resize = store.getState().resize;
+    store.getState().arrangeItems(scope, bounds);
+    expect(store.getState().state.layout).toEqual(scattered);
+    expect(store.getState().resize).toBe(resize);
+  });
+});
