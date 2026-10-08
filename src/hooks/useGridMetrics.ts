@@ -14,14 +14,21 @@ export function useGridMetrics(
     const node = ref.current;
     if (!node) return;
 
-    const observer = new ResizeObserver(([entry]) => {
-      if (!entry) return;
-      const { width, height } = entry.contentRect;
+    const measure = (width: number, height: number) => {
       setSize((previous) =>
         previous?.width === width && previous.height === height
           ? previous
           : { width, height },
       );
+    };
+
+    const initialBounds = node.getBoundingClientRect();
+    measure(initialBounds.width, initialBounds.height);
+
+    const observer = new ResizeObserver(([entry]) => {
+      if (!entry) return;
+      const { width, height } = entry.contentRect;
+      measure(width, height);
     });
     observer.observe(node);
     return () => observer.disconnect();
