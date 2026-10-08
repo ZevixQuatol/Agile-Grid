@@ -23,6 +23,7 @@ interface AgileGridStore {
   toggleEditing: () => void;
   setDockPosition: (position: DockPosition) => void;
   setDockSize: (size: number) => void;
+  setColumns: (columns: number) => void;
   selectItem: (id?: string) => void;
   beginDrag: (id: string, page: number, pointerOffset: DragSession["pointerOffset"], bounds: DragSession["bounds"]) => boolean;
   previewDrag: (rect: GridRect) => void;
@@ -84,6 +85,10 @@ export function createAgileGridStore(layout: GridLayout = demoLayout) {
     setDockSize: (size) => set(({ state }) => {
       if (!state.editing || !Number.isInteger(size) || size < dockSizeRange.min || size > dockSizeRange.max || size === state.dock.size) return {};
       return { state: { ...state, dock: { ...state.dock, size }, selectedItemId: undefined }, drag: null, resize: null };
+    }),
+    setColumns: (columns) => set(({ state }) => {
+      if (!state.editing || !Number.isSafeInteger(columns) || columns < 1 || columns === state.config.columns) return {};
+      return { state: { ...state, config: { ...state.config, columns }, selectedItemId: undefined }, drag: null, resize: null };
     }),
     selectItem: (id) => set(({ state }) => {
       if (!state.editing || (id !== undefined && !state.layout.pages[state.activePage].items.some((item) => item.id === id))) return {};

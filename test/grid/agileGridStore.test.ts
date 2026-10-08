@@ -215,9 +215,11 @@ describe("editing permissions and cancellation", () => {
     api.removeItem("a", bounds);
     api.arrangeItems("all", bounds);
     api.setDockSize(80);
+    api.setColumns(4);
     expect(store.getState().state.layout).toEqual(layout);
     expect(store.getState().state.selectedItemId).toBeUndefined();
     expect(store.getState().state.dock.size).toBe(48);
+    expect(store.getState().state.config.columns).toBe(12);
   });
 
   it("honors item drag/resize flags and rejects invalid capacity without locking passive reflow", () => {
@@ -268,5 +270,24 @@ describe("editing permissions and cancellation", () => {
     expect(store.getState().drag).toBeNull();
     expect(store.getState().resize).toBeNull();
     expect(store.getState().state.selectedItemId).toBeUndefined();
+  });
+});
+
+describe("column configuration", () => {
+  it("requires editing, rejects invalid values, cancels interaction, and adapts without losing ids", () => {
+    const store = createAgileGridStore(layout);
+    store.getState().setColumns(1);
+    expect(store.getState().state.config.columns).toBe(12);
+    store.getState().toggleEditing();
+    for (const columns of [0, -1, 1.5, NaN, Infinity, Number.MAX_SAFE_INTEGER + 1]) store.getState().setColumns(columns);
+    expect(store.getState().state.config.columns).toBe(12);
+    store.getState().beginDrag("a", 0, { x: 0, y: 0 }, { columns: 4, rows: 1 });
+    store.getState().previewDrag({ x: 1, y: 0, w: 1, h: 1 });
+    store.getState().setColumns(1);
+    expect(store.getState().drag).toBeNull();
+    expect(store.getState().state.selectedItemId).toBeUndefined();
+    expect(store.getState().state.layout).toEqual(layout);
+    store.getState().adaptLayout({ columns: 1, rows: 1 });
+    expect(store.getState().state.layout.pages.map((page) => page.items.map((item) => item.id))).toEqual([["a"], ["b"]]);
   });
 });

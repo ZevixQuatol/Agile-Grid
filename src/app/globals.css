@@ -39,6 +39,9 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .dock-menu select { font: inherit; padding: 3px; }
 .dock-menu input { width: 130px; accent-color: var(--accent); }
 .dock-menu small { color: var(--muted); }
+.column-settings { display: flex; flex-direction: column; gap: 6px; }
+.column-settings button { align-self: flex-end; padding: 4px 8px; border: 1px solid var(--line); border-radius: 5px; background: #f1f4f4; color: var(--accent); cursor: pointer; }
+.column-settings button:disabled { opacity: .4; cursor: default; }
 .dock-overflow { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
 .app-header .dock-overflow > * { display: none; }
 .header-actions { display: flex; align-items: center; gap: 8px; min-width: 0; }

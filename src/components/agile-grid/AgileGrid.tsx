@@ -22,6 +22,7 @@ export function AgileGrid() {
   const dock = useStore(store, (value) => value.state.dock);
   const setDockPosition = useStore(store, (value) => value.setDockPosition);
   const setDockSize = useStore(store, (value) => value.setDockSize);
+  const setColumns = useStore(store, (value) => value.setColumns);
   const config = useStore(store, (value) => value.state.config);
   const layout = useStore(store, (value) => value.state.layout);
   const activePage = useStore(store, (value) => value.state.activePage);
@@ -187,7 +188,7 @@ export function AgileGrid() {
           <div className="header-actions">
             {editButton}{addButton}{navigation}{overlayButton}{arrangementButtons}
           </div>
-          <DockMenu dock={dock} editing={editing} onPositionChange={setDockPosition} onSizeChange={setDockSize}>
+          <DockMenu dock={dock} columns={config.columns} editing={editing} onPositionChange={setDockPosition} onSizeChange={setDockSize} onColumnsChange={setColumns}>
             {editButton}{addButton}{navigation}{overlayButton}{arrangementButtons}
           </DockMenu>
         </div>

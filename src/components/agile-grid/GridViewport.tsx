@@ -53,27 +53,38 @@ export function GridViewport({ page, config, metrics, viewportRef, showOverlay, 
 
   useEffect(() => {
     if ((!drag && !resize) || !metrics || !viewportRef.current) return;
-    const move = (event: PointerEvent) => {
-      if (event.pointerId !== capturedPointer.current?.id) return;
+    let frame: number | null = null;
+    let point: { x: number; y: number } | null = null;
+    const flush = () => {
+      if (frame !== null) cancelAnimationFrame(frame);
+      frame = null;
+      if (!point) return;
+      const latest = point;
+      point = null;
       const bounds = viewportRef.current?.getBoundingClientRect();
       if (!bounds) return;
       if (resize) {
         onPreviewResize({
-          x: Math.round((event.clientX - resize.pointerStart.x) / (metrics.cellWidth + metrics.gapX)),
-          y: Math.round((event.clientY - resize.pointerStart.y) / (metrics.cellHeight + metrics.gapY)),
+          x: Math.round((latest.x - resize.pointerStart.x) / (metrics.cellWidth + metrics.gapX)),
+          y: Math.round((latest.y - resize.pointerStart.y) / (metrics.cellHeight + metrics.gapY)),
         });
         return;
       }
-      const point = { x: event.clientX - bounds.left, y: event.clientY - bounds.top };
-      const next = dragToGrid(drag!.start, drag!.pointerOffset, point, metrics);
+      const next = dragToGrid(drag!.start, drag!.pointerOffset, { x: latest.x - bounds.left, y: latest.y - bounds.top }, metrics);
       onPreviewDrag({ ...drag!.start, ...next });
     };
-    const end = (event: PointerEvent) => { if (event.pointerId === capturedPointer.current?.id) resize ? onCommitResize() : onCommitDrag(); };
+    const move = (event: PointerEvent) => {
+      if (event.pointerId !== capturedPointer.current?.id) return;
+      point = { x: event.clientX, y: event.clientY };
+      if (frame === null) frame = requestAnimationFrame(flush);
+    };
+    const end = (event: PointerEvent) => { if (event.pointerId === capturedPointer.current?.id) { flush(); resize ? onCommitResize() : onCommitDrag(); } };
     const cancel = (event: PointerEvent) => { if (event.pointerId === capturedPointer.current?.id) resize ? onCancelResize() : onCancelDrag(); };
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", end);
     window.addEventListener("pointercancel", cancel);
     return () => {
+      if (frame !== null) cancelAnimationFrame(frame);
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", end);
       window.removeEventListener("pointercancel", cancel);

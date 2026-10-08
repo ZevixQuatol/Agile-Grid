@@ -4,13 +4,15 @@ import { dockSizeRange } from "@/stores/agileGridStore";
 
 interface Props {
   dock: DockBarState;
+  columns: number;
   editing: boolean;
   onPositionChange: (position: DockPosition) => void;
   onSizeChange: (size: number) => void;
+  onColumnsChange: (columns: number) => void;
   children: ReactNode;
 }
 
-export function DockMenu({ dock, editing, onPositionChange, onSizeChange, children }: Props) {
+export function DockMenu({ dock, columns, editing, onPositionChange, onSizeChange, onColumnsChange, children }: Props) {
   const id = useId();
   return (
     <>
@@ -35,7 +37,18 @@ export function DockMenu({ dock, editing, onPositionChange, onSizeChange, childr
           厚度 · {dock.size} px
           <input type="range" aria-label="Dock 厚度" min={dockSizeRange.min} max={dockSizeRange.max} step={1} value={dock.size} disabled={!editing} onChange={(event) => onSizeChange(event.target.valueAsNumber)} />
         </label>
-        {!editing && <small>进入编辑模式可调整厚度</small>}
+        <form className="column-settings" key={`${columns}-${editing}`} onSubmit={(event) => {
+          event.preventDefault();
+          const input = event.currentTarget.elements.namedItem("columns") as HTMLInputElement;
+          onColumnsChange(input.valueAsNumber);
+        }}>
+          <label>
+            网格列数
+            <input name="columns" type="number" aria-label="网格列数" min={1} step={1} defaultValue={columns} required disabled={!editing} />
+          </label>
+          <button type="submit" disabled={!editing}>应用列数</button>
+        </form>
+        {!editing && <small>进入编辑模式可调整厚度和列数</small>}
         <div className="dock-overflow" role="group" aria-label="网格操作">{children}</div>
       </div>
     </>
