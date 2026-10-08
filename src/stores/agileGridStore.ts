@@ -3,9 +3,10 @@ import demoLayout from "@/data/demo-layout.json";
 import { addGridItem, adaptLayoutToBounds, compactLayout, compactPage, reflowDraggedItem } from "@/core/grid/placement";
 import { resizeRect } from "@/core/grid/resize";
 import { fitsGrid } from "@/core/grid/coordinates";
+import { dockSizeRange } from "@/core/grid/types";
 import type { AgileGridItem, AgileGridState, DockPosition, DragSession, GridBounds, GridConfig, GridLayout, GridRect, ResizeHandle, ResizeSession } from "@/core/grid/types";
 
-export const dockSizeRange = { min: 40, max: 160 };
+export { dockSizeRange } from "@/core/grid/types";
 
 const defaultConfig: GridConfig = {
   columns: 12,

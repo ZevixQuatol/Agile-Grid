@@ -7,12 +7,13 @@ import type { GridConfig } from "@/core/grid/types";
 export function useGridMetrics(
   ref: RefObject<HTMLDivElement | null>,
   config: GridConfig,
+  enabled = true,
 ) {
   const [size, setSize] = useState<{ width: number; height: number } | null>(null);
 
   useEffect(() => {
     const node = ref.current;
-    if (!node) return;
+    if (!enabled || !node) return;
 
     const measure = (width: number, height: number) => {
       setSize((previous) =>
@@ -32,10 +33,10 @@ export function useGridMetrics(
     });
     observer.observe(node);
     return () => observer.disconnect();
-  }, [ref]);
+  }, [ref, enabled]);
 
   return useMemo(
-    () => size ? getGridMetrics(size.width, size.height, config) : null,
-    [size, config],
+    () => enabled && size ? getGridMetrics(size.width, size.height, config) : null,
+    [size, config, enabled],
   );
 }

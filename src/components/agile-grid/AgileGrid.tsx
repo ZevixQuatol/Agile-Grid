@@ -5,6 +5,7 @@ import { useStore } from "zustand";
 import type { AgileGridItem } from "@/core/grid/types";
 import { createAgileGridStore } from "@/stores/agileGridStore";
 import { useGridMetrics } from "@/hooks/useGridMetrics";
+import { useGridPersistence } from "@/hooks/useGridPersistence";
 import { DemoWidget } from "@/components/widgets/DemoWidget";
 import { DockMenu } from "@/components/dock-bar/DockMenu";
 import { GridViewport } from "./GridViewport";
@@ -16,6 +17,7 @@ function renderDemo(item: AgileGridItem) {
 
 export function AgileGrid() {
   const [store] = useState(createAgileGridStore);
+  const { ready, message } = useGridPersistence(store);
   const aboutId = useId();
   const dock = useStore(store, (value) => value.state.dock);
   const setDockPosition = useStore(store, (value) => value.setDockPosition);
@@ -45,13 +47,14 @@ export function AgileGrid() {
   const adaptLayout = useStore(store, (value) => value.adaptLayout);
   const arrangeItems = useStore(store, (value) => value.arrangeItems);
   const viewportRef = useRef<HTMLDivElement>(null);
-  const metrics = useGridMetrics(viewportRef, config);
+  const metrics = useGridMetrics(viewportRef, config, ready);
   const page = layout.pages[activePage];
   useEffect(() => {
+    if (!ready) return;
     adaptLayout(metrics && metrics.cellWidth > 0 && metrics.rows > 0
       ? { columns: metrics.columns, rows: metrics.rows }
       : { columns: 0, rows: 0 });
-  }, [adaptLayout, metrics]);
+  }, [adaptLayout, metrics, ready]);
   const handleAddItem = () => {
     if (!metrics || metrics.cellWidth <= 0 || metrics.rows < 1) return;
     const ids = new Set(layout.pages.flatMap((value) => value.items.map((item) => item.id)));
@@ -156,7 +159,7 @@ export function AgileGrid() {
           </>;
 
   return (
-    <div className="agile-grid-shell" data-dock={dock.position} style={{ "--dock-size": `${dock.size}px` } as CSSProperties} onKeyDown={handleKeyDown} tabIndex={-1}>
+    <div className="agile-grid-shell" data-dock={dock.position} data-dock-visible={dock.visible} style={{ "--dock-size": `${dock.size}px` } as CSSProperties} onKeyDown={handleKeyDown} tabIndex={-1}>
       <header className="app-header" data-vertical={dock.position === "left" || dock.position === "right"}>
         <div className="header-controls">
           <div className="brand">
@@ -189,6 +192,7 @@ export function AgileGrid() {
           </DockMenu>
         </div>
       </header>
+      {message && <div className="persistence-message" role="status">{message}</div>}
       <GridViewport page={page} config={config} metrics={metrics} viewportRef={viewportRef} showOverlay={showOverlay} renderItem={renderDemo} editing={editing} selectedItemId={selectedItemId} onSelect={selectItem} onBeginDrag={(id, offset, bounds) => beginDrag(id, activePage, offset, bounds)} onPreviewDrag={previewDrag} onCommitDrag={commitDrag} onCancelDrag={cancelDrag} onBeginResize={(id, handle, pointerStart, bounds) => beginResize(id, activePage, handle, pointerStart, bounds)} onPreviewResize={previewResize} onCommitResize={commitResize} onCancelResize={cancelResize} onDelete={handleDeleteItem} drag={drag} resize={resize} />
     </div>
   );

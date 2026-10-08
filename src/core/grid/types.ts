@@ -63,6 +63,8 @@ export interface GridMetrics extends GridBounds {
 
 export type DockPosition = "top" | "bottom" | "left" | "right";
 
+export const dockSizeRange = { min: 40, max: 160 };
+
 export type ResizeHandle = "right" | "bottom" | "corner";
 
 export interface DockBarState {
