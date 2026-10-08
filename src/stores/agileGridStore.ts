@@ -2,7 +2,9 @@ import { createStore } from "zustand/vanilla";
 import demoLayout from "@/data/demo-layout.json";
 import { addGridItem, adaptLayoutToBounds, compactLayout, compactPage, reflowDraggedItem } from "@/core/grid/placement";
 import { resizeRect } from "@/core/grid/resize";
-import type { AgileGridItem, AgileGridState, DragSession, GridBounds, GridConfig, GridLayout, GridRect, ResizeHandle, ResizeSession } from "@/core/grid/types";
+import type { AgileGridItem, AgileGridState, DockPosition, DragSession, GridBounds, GridConfig, GridLayout, GridRect, ResizeHandle, ResizeSession } from "@/core/grid/types";
+
+export const dockSizeRange = { min: 40, max: 160 };
 
 const defaultConfig: GridConfig = {
   columns: 12,
@@ -17,6 +19,8 @@ interface AgileGridStore {
   setActivePage: (page: number) => void;
   toggleOverlay: () => void;
   toggleEditing: () => void;
+  setDockPosition: (position: DockPosition) => void;
+  setDockSize: (size: number) => void;
   selectItem: (id?: string) => void;
   beginDrag: (id: string, page: number, pointerOffset: DragSession["pointerOffset"], bounds: DragSession["bounds"]) => boolean;
   previewDrag: (rect: GridRect) => void;
@@ -70,6 +74,14 @@ export function createAgileGridStore(layout: GridLayout = demoLayout) {
     },
     toggleOverlay: () => set(({ showOverlay }) => ({ showOverlay: !showOverlay })),
     toggleEditing: () => set(({ state }) => ({ state: { ...state, editing: !state.editing, selectedItemId: undefined }, drag: null, resize: null })),
+    setDockPosition: (position) => set(({ state }) => {
+      if (!["top", "bottom", "left", "right"].includes(position) || position === state.dock.position) return {};
+      return { state: { ...state, dock: { ...state.dock, position }, selectedItemId: undefined }, drag: null, resize: null };
+    }),
+    setDockSize: (size) => set(({ state }) => {
+      if (!state.editing || !Number.isInteger(size) || size < dockSizeRange.min || size > dockSizeRange.max || size === state.dock.size) return {};
+      return { state: { ...state, dock: { ...state.dock, size }, selectedItemId: undefined }, drag: null, resize: null };
+    }),
     selectItem: (id) => set(({ state }) => ({ state: { ...state, selectedItemId: id } })),
     beginDrag: (id, page, pointerOffset, bounds) => {
       let started = false;

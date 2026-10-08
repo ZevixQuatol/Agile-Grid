@@ -18,7 +18,7 @@ export function PageNavigation({ activePage, pageCount, onPageChange }: Props) {
           <path d="m14 6-6 6 6 6" />
         </svg>
       </button>
-      <span className="page-count" aria-live="polite">第 {activePage + 1} / {pageCount} 页</span>
+      <span className="page-count" aria-live="polite" aria-label={`第 ${activePage + 1} / ${pageCount} 页`} title={`第 ${activePage + 1} / ${pageCount} 页`}>{activePage + 1} / {pageCount}</span>
       <button
         className="icon-button"
         type="button"

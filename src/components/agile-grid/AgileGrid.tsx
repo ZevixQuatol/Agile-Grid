@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
 import { useStore } from "zustand";
 import type { AgileGridItem } from "@/core/grid/types";
 import { createAgileGridStore } from "@/stores/agileGridStore";
 import { useGridMetrics } from "@/hooks/useGridMetrics";
 import { DemoWidget } from "@/components/widgets/DemoWidget";
+import { DockMenu } from "@/components/dock-bar/DockMenu";
 import { GridViewport } from "./GridViewport";
 import { PageNavigation } from "./PageNavigation";
 
@@ -15,7 +16,10 @@ function renderDemo(item: AgileGridItem) {
 
 export function AgileGrid() {
   const [store] = useState(createAgileGridStore);
-  const [aboutOpen, setAboutOpen] = useState(false);
+  const aboutId = useId();
+  const dock = useStore(store, (value) => value.state.dock);
+  const setDockPosition = useStore(store, (value) => value.setDockPosition);
+  const setDockSize = useStore(store, (value) => value.setDockSize);
   const config = useStore(store, (value) => value.state.config);
   const layout = useStore(store, (value) => value.state.layout);
   const activePage = useStore(store, (value) => value.state.activePage);
@@ -72,44 +76,7 @@ export function AgileGrid() {
     }
   };
 
-  return (
-    <div className="agile-grid-shell" onKeyDown={handleKeyDown} tabIndex={-1}>
-      <header className="app-header">
-        <div className="header-controls">
-          <div className="brand">
-            <span className="brand-mark" aria-hidden="true"><i /><i /><i /><i /></span>
-            <button
-              className="icon-button about-button"
-              type="button"
-              aria-label="关于 Agile Grid 灵巧网格"
-              aria-expanded={aboutOpen}
-              title="关于 Agile Grid / 灵巧网格"
-              onClick={() => setAboutOpen((open) => !open)}
-            >
-              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <circle cx="12" cy="12" r="8.5" />
-                <path d="M12 10.5v5" />
-                <path d="M12 7.5h.01" />
-              </svg>
-            </button>
-            {aboutOpen && (
-              <div className="about-popover" role="dialog" aria-label="关于 Agile Grid">
-                <strong>Agile Grid</strong>
-                <span>灵巧网格</span>
-                <div className="grid-status" role="group" aria-label="网格信息">
-                  <div className="metric-group">
-                    <span><b>{config.columns}</b> 列</span>
-                    <span><b>{metrics?.rows ?? "—"}</b> 行</span>
-                    <span className="metric-secondary">Cell <b>{metrics ? metrics.cellWidth.toFixed(2) : "—"}</b> × <b>{config.rowHeight}</b> px</span>
-                    <span className="metric-secondary">Gap <b>{config.gapX}</b> / <b>{config.gapY}</b> px</span>
-                  </div>
-                  <span className="status-mode"><i aria-hidden="true" />浏览模式 · 本页 {page.items.length} 个块</span>
-                </div>
-              </div>
-            )}
-          </div>
-          <div className="header-actions">
-          <button
+  const editButton = <button
             className="icon-button edit-toggle"
             type="button"
             aria-label={editing ? "完成编辑" : "进入编辑模式"}
@@ -121,9 +88,9 @@ export function AgileGrid() {
               <path d="m4 16.5-.75 3.25L6.5 19 17.75 7.75a2.12 2.12 0 0 0-3-3L3.25 16" />
               <path d="m13.5 6.5 4 4" />
             </svg>
-          </button>
-          {editing && <button
-            className="icon-button add-item"
+          </button>;
+  const addButton = editing && <button
+            className="icon-button add-item dock-secondary"
             type="button"
             aria-label="新增 Widget"
             title="新增 Widget"
@@ -133,9 +100,9 @@ export function AgileGrid() {
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M12 5v14M5 12h14" />
             </svg>
-          </button>}
-          <PageNavigation activePage={activePage} pageCount={layout.pages.length} onPageChange={setActivePage} />
-          <button
+          </button>;
+  const navigation = <PageNavigation activePage={activePage} pageCount={layout.pages.length} onPageChange={setActivePage} />;
+  const overlayButton = <button
             className="icon-button overlay-toggle"
             type="button"
             aria-label="网格辅助线"
@@ -149,10 +116,10 @@ export function AgileGrid() {
               <rect x="4" y="14" width="6" height="6" rx="1" />
               <rect x="14" y="14" width="6" height="6" rx="1" />
             </svg>
-          </button>
-          {editing && <>
+          </button>;
+  const arrangementButtons = editing && <>
             <button
-              className="icon-button"
+              className="icon-button dock-secondary"
               type="button"
               aria-label="本页补位"
               title="本页补位"
@@ -164,7 +131,7 @@ export function AgileGrid() {
               </svg>
             </button>
             <button
-              className="icon-button"
+              className="icon-button dock-secondary"
               type="button"
               aria-label="自动排布全部页面"
               title="自动排布全部页面"
@@ -177,8 +144,40 @@ export function AgileGrid() {
                 <path d="M3 17h18m-4-4 4 4-4 4" />
               </svg>
             </button>
-          </>}
+          </>;
+
+  return (
+    <div className="agile-grid-shell" data-dock={dock.position} style={{ "--dock-size": `${dock.size}px` } as CSSProperties} onKeyDown={handleKeyDown} tabIndex={-1}>
+      <header className="app-header" data-vertical={dock.position === "left" || dock.position === "right"}>
+        <div className="header-controls">
+          <div className="brand">
+            <span className="brand-mark" aria-hidden="true"><i /><i /><i /><i /></span>
+            <button className="icon-button about-button" type="button" aria-label="关于 Agile Grid 灵巧网格" title="关于 Agile Grid / 灵巧网格" popoverTarget={aboutId}>
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="12" cy="12" r="8.5" />
+                <path d="M12 10.5v5M12 7.5h.01" />
+              </svg>
+            </button>
+            <div className="dock-popover about-popover" id={aboutId} popover="auto" role="dialog" aria-label="关于 Agile Grid">
+              <strong>Agile Grid</strong>
+              <span>灵巧网格</span>
+              <div className="grid-status" role="group" aria-label="网格信息">
+                <div className="metric-group">
+                  <span><b>{config.columns}</b> 列</span>
+                  <span><b>{metrics?.rows ?? "—"}</b> 行</span>
+                  <span className="metric-secondary">Cell <b>{metrics ? metrics.cellWidth.toFixed(2) : "—"}</b> × <b>{config.rowHeight}</b> px</span>
+                  <span className="metric-secondary">Gap <b>{config.gapX}</b> / <b>{config.gapY}</b> px</span>
+                </div>
+                <span className="status-mode"><i aria-hidden="true" />{editing ? "编辑模式" : "浏览模式"} · 本页 {page.items.length} 个块</span>
+              </div>
+            </div>
           </div>
+          <div className="header-actions">
+            {editButton}{addButton}{navigation}{overlayButton}{arrangementButtons}
+          </div>
+          <DockMenu dock={dock} editing={editing} onPositionChange={setDockPosition} onSizeChange={setDockSize}>
+            {editButton}{addButton}{navigation}{overlayButton}{arrangementButtons}
+          </DockMenu>
         </div>
       </header>
       <GridViewport page={page} config={config} metrics={metrics} viewportRef={viewportRef} showOverlay={showOverlay} renderItem={renderDemo} editing={editing} selectedItemId={selectedItemId} onSelect={selectItem} onBeginDrag={(id, offset, bounds) => beginDrag(id, activePage, offset, bounds)} onPreviewDrag={previewDrag} onCommitDrag={commitDrag} onCancelDrag={cancelDrag} onBeginResize={(id, handle, pointerStart, bounds) => beginResize(id, activePage, handle, pointerStart, bounds)} onPreviewResize={previewResize} onCommitResize={commitResize} onCancelResize={cancelResize} onDelete={handleDeleteItem} drag={drag} resize={resize} />

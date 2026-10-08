@@ -150,3 +150,54 @@ describe("arrangement permissions and commits", () => {
     expect(store.getState().resize).toBe(resize);
   });
 });
+
+describe("Dock configuration", () => {
+  it("switches all directions in browse mode without changing committed items or page", () => {
+    const store = createAgileGridStore({ pages: [layout.pages[0], { items: [] }] });
+    store.getState().setActivePage(1);
+    for (const position of ["bottom", "left", "right", "top"] as const) {
+      store.getState().setDockPosition(position);
+      expect(store.getState().state.dock).toEqual({ position, size: 48, visible: true });
+      expect(store.getState().state.layout.pages[0]).toEqual(layout.pages[0]);
+      expect(store.getState().state.activePage).toBe(1);
+      expect(store.getState().state.editing).toBe(false);
+    }
+  });
+
+  it("only accepts finite integer thickness in the edit-mode range", () => {
+    const store = createAgileGridStore(layout);
+    store.getState().setDockSize(80);
+    expect(store.getState().state.dock.size).toBe(48);
+    store.getState().toggleEditing();
+    for (const size of [NaN, Infinity, -1, 39, 161, 48.5]) {
+      store.getState().setDockSize(size);
+      expect(store.getState().state.dock.size).toBe(48);
+    }
+    for (const size of [40, 160, 48]) {
+      store.getState().setDockSize(size);
+      expect(store.getState().state.dock.size).toBe(size);
+    }
+  });
+
+  it.each(["drag", "resize"] as const)("cancels a %s preview before changing Dock and adapting capacity", (kind) => {
+    const store = createAgileGridStore(layout);
+    store.getState().toggleEditing();
+    if (kind === "drag") {
+      store.getState().beginDrag("a", 0, { x: 0, y: 0 }, { columns: 4, rows: 2 });
+      store.getState().previewDrag({ x: 1, y: 0, w: 1, h: 1 });
+      store.getState().setDockPosition("left");
+    } else {
+      store.getState().beginResize("a", 0, "corner", { x: 0, y: 0 }, { columns: 4, rows: 2 });
+      store.getState().previewResize({ x: 3, y: 1 });
+      store.getState().setDockSize(160);
+    }
+    expect(store.getState().drag).toBeNull();
+    expect(store.getState().resize).toBeNull();
+    expect(store.getState().state.selectedItemId).toBeUndefined();
+    store.getState().commitDrag();
+    store.getState().commitResize();
+    expect(store.getState().state.layout).toEqual(layout);
+    store.getState().adaptLayout({ columns: 1, rows: 1 });
+    expect(store.getState().state.layout.pages.map((page) => page.items.map((item) => item.id))).toEqual([["a"], ["b"]]);
+  });
+});
