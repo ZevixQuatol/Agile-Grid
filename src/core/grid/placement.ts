@@ -23,6 +23,10 @@ function firstFit(item: AgileGridItem, items: AgileGridItem[], bounds: GridBound
 
 interface GridPoint { x: number; y: number }
 
+function canFitSize(item: GridRect, bounds: GridBounds): boolean {
+  return fitsGrid({ x: 0, y: 0, w: item.w, h: item.h }, bounds);
+}
+
 export function reflowDraggedItem(
   pages: GridPage[],
   pageIndex: number,
@@ -32,6 +36,7 @@ export function reflowDraggedItem(
 ): PlacementResult {
   const source = pages[pageIndex]?.items.find((item) => item.id === itemId);
   if (!source) return { pages, placed: requested, success: false };
+  if (!fitsGrid(requested, bounds)) return { pages, placed: source, success: false };
 
   const nextPages = pages.map((page) => ({ items: page.items.map((item) => ({ ...item })) }));
   const moving = { ...source, ...requested };
@@ -42,6 +47,7 @@ export function reflowDraggedItem(
   let carry = displaced.sort((a, b) => a.y - b.y || a.x - b.x || a.id.localeCompare(b.id));
   for (let i = 0; i < carry.length; i += 1) {
     const item = carry[i];
+    if (!canFitSize(item, bounds)) return { pages, placed: source, success: false };
     let placed: GridRect | null = null;
     for (let page = pageIndex; page < nextPages.length && !placed; page += 1) {
       const candidates = nextPages[page].items.filter((candidate) => candidate.id !== item.id);
@@ -49,6 +55,11 @@ export function reflowDraggedItem(
       if (placed) {
         nextPages[page].items = candidates.concat({ ...item, ...placed });
       }
+    }
+    if (!placed) {
+      nextPages.push({ items: [] });
+      placed = firstFit(item, [], bounds);
+      if (placed) nextPages[nextPages.length - 1].items.push({ ...item, ...placed });
     }
     if (!placed) return { pages, placed: source, success: false };
   }

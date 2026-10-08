@@ -63,6 +63,8 @@ export interface GridMetrics extends GridBounds {
 
 export type DockPosition = "top" | "bottom" | "left" | "right";
 
+export type ResizeHandle = "right" | "bottom" | "corner";
+
 export interface DockBarState {
   position: DockPosition;
   size: number;
@@ -87,5 +89,17 @@ export interface DragSession {
   preview: GridRect;
   previewLayout: GridLayout;
   pointerOffset: GridPoint;
+  blocked: boolean;
+}
+
+export interface ResizeSession {
+  id: string;
+  page: number;
+  bounds: GridBounds;
+  handle: ResizeHandle;
+  start: GridRect;
+  preview: GridRect;
+  previewLayout: GridLayout;
+  pointerStart: GridPoint;
   blocked: boolean;
 }

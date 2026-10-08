@@ -3,7 +3,7 @@
 import type { ReactNode, RefObject } from "react";
 import { useEffect } from "react";
 import { dragToGrid, fitsGrid, gridToPixel } from "@/core/grid/coordinates";
-import type { AgileGridItem, DragSession, GridConfig, GridMetrics, GridPage } from "@/core/grid/types";
+import type { AgileGridItem, DragSession, GridConfig, GridMetrics, GridPage, ResizeHandle, ResizeSession } from "@/core/grid/types";
 import { GridItem } from "./GridItem";
 import { GridOverlay } from "./GridOverlay";
 
@@ -21,39 +21,54 @@ interface Props {
   onPreviewDrag: (rect: { x: number; y: number; w: number; h: number }) => void;
   onCommitDrag: () => void;
   onCancelDrag: () => void;
+  onBeginResize: (id: string, handle: ResizeHandle, pointerStart: { x: number; y: number }, bounds: { columns: number; rows: number }) => boolean;
+  onPreviewResize: (pointerDelta: { x: number; y: number }) => void;
+  onCommitResize: () => void;
+  onCancelResize: () => void;
   onDelete: (id: string) => void;
   drag: DragSession | null;
+  resize: ResizeSession | null;
 }
 
-export function GridViewport({ page, config, metrics, viewportRef, showOverlay, renderItem, editing, selectedItemId, onSelect, onBeginDrag, onPreviewDrag, onCommitDrag, onCancelDrag, onDelete, drag }: Props) {
+export function GridViewport({ page, config, metrics, viewportRef, showOverlay, renderItem, editing, selectedItemId, onSelect, onBeginDrag, onPreviewDrag, onCommitDrag, onCancelDrag, onBeginResize, onPreviewResize, onCommitResize, onCancelResize, onDelete, drag, resize }: Props) {
   const hasCapacity = metrics !== null && metrics.cellWidth > 0 && metrics.rows > 0;
-  const renderPage = drag?.previewLayout.pages[drag.page] ?? page;
+  const renderPage = resize?.previewLayout.pages[resize.page] ?? drag?.previewLayout.pages[drag.page] ?? page;
   const outside = metrics ? renderPage.items.filter((item) => !fitsGrid(item, metrics)) : [];
   const canRender = hasCapacity && outside.length === 0;
-  const dropPreview = drag && metrics && canRender ? gridToPixel(drag.preview, metrics) : null;
+  const preview = resize?.preview ?? drag?.preview;
+  const blocked = resize?.blocked ?? drag?.blocked ?? false;
+  const dropPreview = preview && metrics && canRender ? gridToPixel(preview, metrics) : null;
 
   useEffect(() => {
-    if (!drag || !metrics || !viewportRef.current) return;
+    if ((!drag && !resize) || !metrics || !viewportRef.current) return;
     const move = (event: PointerEvent) => {
       const bounds = viewportRef.current?.getBoundingClientRect();
       if (!bounds) return;
+      if (resize) {
+        onPreviewResize({
+          x: Math.round((event.clientX - resize.pointerStart.x) / (metrics.cellWidth + metrics.gapX)),
+          y: Math.round((event.clientY - resize.pointerStart.y) / (metrics.cellHeight + metrics.gapY)),
+        });
+        return;
+      }
       const point = { x: event.clientX - bounds.left, y: event.clientY - bounds.top };
-      const next = dragToGrid(drag.start, drag.pointerOffset, point, metrics);
-      onPreviewDrag({ ...drag.start, ...next });
+      const next = dragToGrid(drag!.start, drag!.pointerOffset, point, metrics);
+      onPreviewDrag({ ...drag!.start, ...next });
     };
-    const end = () => onCommitDrag();
-    const keydown = (event: KeyboardEvent) => { if (event.key === "Escape") onCancelDrag(); };
+    const end = () => resize ? onCommitResize() : onCommitDrag();
+    const cancel = () => resize ? onCancelResize() : onCancelDrag();
+    const keydown = (event: KeyboardEvent) => { if (event.key === "Escape") cancel(); };
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", end, { once: true });
-    window.addEventListener("pointercancel", onCancelDrag, { once: true });
+    window.addEventListener("pointercancel", cancel, { once: true });
     window.addEventListener("keydown", keydown);
     return () => {
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", end);
-      window.removeEventListener("pointercancel", onCancelDrag);
+      window.removeEventListener("pointercancel", cancel);
       window.removeEventListener("keydown", keydown);
     };
-  }, [drag, metrics, onCancelDrag, onCommitDrag, onPreviewDrag, viewportRef]);
+  }, [drag, metrics, onCancelDrag, onCancelResize, onCommitDrag, onCommitResize, onPreviewDrag, onPreviewResize, resize, viewportRef]);
 
   return (
     <main className="grid-workspace" style={{ padding: `${config.gapY}px ${config.gapX}px` }}>
@@ -74,7 +89,7 @@ export function GridViewport({ page, config, metrics, viewportRef, showOverlay, 
         {dropPreview && (
           <div
             className="grid-placeholder"
-            data-blocked={drag?.blocked}
+            data-blocked={blocked}
             aria-hidden="true"
             style={{
               transform: `translate3d(${dropPreview.left}px, ${dropPreview.top}px, 0)`,
@@ -85,7 +100,11 @@ export function GridViewport({ page, config, metrics, viewportRef, showOverlay, 
         )}
         {canRender ? (
           renderPage.items.map((item) => (
-            <GridItem key={item.id} item={drag?.id === item.id ? { ...item, ...drag.preview } : item} metrics={metrics} renderItem={renderItem} editing={editing} selected={item.id === selectedItemId} dragging={drag?.id === item.id} blocked={drag?.id === item.id && drag.blocked} onDelete={onDelete} onSelect={onSelect} onPointerDown={(event, value) => {
+            <GridItem key={item.id} item={drag?.id === item.id ? { ...item, ...drag.preview } : resize?.id === item.id ? { ...item, ...resize.preview } : item} metrics={metrics} renderItem={renderItem} editing={editing} selected={item.id === selectedItemId} dragging={drag?.id === item.id || resize?.id === item.id} blocked={(drag?.id === item.id && drag.blocked) || (resize?.id === item.id && resize.blocked)} onDelete={onDelete} onSelect={onSelect} onBeginResize={(event, value, handle) => {
+              event.preventDefault();
+              event.stopPropagation();
+              if (editing && metrics) onBeginResize(value.id, handle, { x: event.clientX, y: event.clientY }, { columns: metrics.columns, rows: metrics.rows });
+            }} onPointerDown={(event, value) => {
               const bounds = event.currentTarget.getBoundingClientRect();
               const offset = { x: event.clientX - bounds.left, y: event.clientY - bounds.top };
               if (editing && metrics) onBeginDrag(value.id, offset, { columns: metrics.columns, rows: metrics.rows });
@@ -105,7 +124,7 @@ export function GridViewport({ page, config, metrics, viewportRef, showOverlay, 
             )}
           </div>
         )}
-        {drag?.blocked && <div className="drag-warning" role="status">被遮挡，无法放置</div>}
+        {blocked && <div className="drag-warning" role="status">被遮挡，无法放置</div>}
       </div>
     </main>
   );

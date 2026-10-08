@@ -1,6 +1,6 @@
 import { memo, type PointerEvent, type ReactNode } from "react";
 import { gridToPixel } from "@/core/grid/coordinates";
-import type { AgileGridItem, GridMetrics } from "@/core/grid/types";
+import type { AgileGridItem, GridMetrics, ResizeHandle } from "@/core/grid/types";
 
 interface Props {
   item: AgileGridItem;
@@ -14,11 +14,12 @@ interface Props {
   onPointerCancel?: () => void;
   onSelect: (id: string) => void;
   onDelete: (id: string) => void;
+  onBeginResize: (event: PointerEvent<HTMLElement>, item: AgileGridItem, handle: ResizeHandle) => void;
   dragging?: boolean;
   blocked?: boolean;
 }
 
-export const GridItem = memo(function GridItem({ item, metrics, renderItem, editing, selected, onPointerDown, onSelect, onPointerMove, onPointerUp, onPointerCancel, onDelete, dragging, blocked }: Props) {
+export const GridItem = memo(function GridItem({ item, metrics, renderItem, editing, selected, onPointerDown, onSelect, onPointerMove, onPointerUp, onPointerCancel, onDelete, onBeginResize, dragging, blocked }: Props) {
   const rect = gridToPixel(item, metrics);
 
   return (
@@ -50,6 +51,13 @@ export const GridItem = memo(function GridItem({ item, metrics, renderItem, edit
       onPointerCancel={onPointerCancel}
     >
       {editing && <button className="item-delete" type="button" aria-label={`删除 ${item.id}`} title="删除块" onPointerDown={(event) => { event.preventDefault(); event.stopPropagation(); }} onClick={(event) => { event.preventDefault(); event.stopPropagation(); onDelete(item.id); }}>−</button>}
+      {editing && selected && (
+        <>
+          <button className="resize-handle resize-right" type="button" aria-label={`调整 ${item.id} 宽度`} title="调整宽度" onPointerDown={(event) => onBeginResize(event, item, "right")} />
+          <button className="resize-handle resize-bottom" type="button" aria-label={`调整 ${item.id} 高度`} title="调整高度" onPointerDown={(event) => onBeginResize(event, item, "bottom")} />
+          <button className="resize-handle resize-corner" type="button" aria-label={`调整 ${item.id} 大小`} title="调整大小" onPointerDown={(event) => onBeginResize(event, item, "corner")} />
+        </>
+      )}
       {renderItem(item)}
     </section>
   );

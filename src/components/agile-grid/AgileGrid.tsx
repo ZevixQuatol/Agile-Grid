@@ -25,15 +25,23 @@ export function AgileGrid() {
   const editing = useStore(store, (value) => value.state.editing);
   const selectedItemId = useStore(store, (value) => value.state.selectedItemId);
   const drag = useStore(store, (value) => value.drag);
+  const resize = useStore(store, (value) => value.resize);
   const toggleEditing = useStore(store, (value) => value.toggleEditing);
   const selectItem = useStore(store, (value) => value.selectItem);
   const beginDrag = useStore(store, (value) => value.beginDrag);
   const previewDrag = useStore(store, (value) => value.previewDrag);
   const commitDrag = useStore(store, (value) => value.commitDrag);
   const cancelDrag = useStore(store, (value) => value.cancelDrag);
+  const beginResize = useStore(store, (value) => value.beginResize);
+  const previewResize = useStore(store, (value) => value.previewResize);
+  const commitResize = useStore(store, (value) => value.commitResize);
+  const cancelResize = useStore(store, (value) => value.cancelResize);
   const removeItem = useStore(store, (value) => value.removeItem);
   const handleKeyDown = (event: React.KeyboardEvent) => {
-    if (event.key === "Escape") cancelDrag();
+    if (event.key === "Escape") {
+      cancelDrag();
+      cancelResize();
+    }
   };
   const viewportRef = useRef<HTMLDivElement>(null);
   const metrics = useGridMetrics(viewportRef, config);
@@ -108,7 +116,7 @@ export function AgileGrid() {
           </div>
         </div>
       </header>
-      <GridViewport page={page} config={config} metrics={metrics} viewportRef={viewportRef} showOverlay={showOverlay} renderItem={renderDemo} editing={editing} selectedItemId={selectedItemId} onSelect={selectItem} onBeginDrag={(id, offset, bounds) => beginDrag(id, activePage, offset, bounds)} onPreviewDrag={previewDrag} onCommitDrag={commitDrag} onCancelDrag={cancelDrag} onDelete={removeItem} drag={drag} />
+      <GridViewport page={page} config={config} metrics={metrics} viewportRef={viewportRef} showOverlay={showOverlay} renderItem={renderDemo} editing={editing} selectedItemId={selectedItemId} onSelect={selectItem} onBeginDrag={(id, offset, bounds) => beginDrag(id, activePage, offset, bounds)} onPreviewDrag={previewDrag} onCommitDrag={commitDrag} onCancelDrag={cancelDrag} onBeginResize={(id, handle, pointerStart, bounds) => beginResize(id, activePage, handle, pointerStart, bounds)} onPreviewResize={previewResize} onCommitResize={commitResize} onCancelResize={cancelResize} onDelete={removeItem} drag={drag} resize={resize} />
     </div>
   );
 }

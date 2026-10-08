@@ -36,4 +36,22 @@ describe("Agile Grid editing store", () => {
     store.getState().removeItem("a");
     expect(store.getState().state.layout.pages[0].items.map((item) => item.id)).toEqual(["b"]);
   });
+
+  it("resizes a selected item and reflows the item it overlaps", () => {
+    const store = createAgileGridStore(layout);
+    store.getState().toggleEditing();
+    expect(store.getState().beginResize("a", 0, "right", { x: 0, y: 0 }, { columns: 4, rows: 2 })).toBe(true);
+
+    store.getState().previewResize({ x: 1, y: 0 });
+
+    expect(store.getState().resize).toMatchObject({
+      preview: { x: 0, y: 0, w: 2, h: 1 },
+      blocked: false,
+    });
+    store.getState().commitResize();
+    expect(store.getState().state.layout.pages[0].items).toEqual([
+      { ...layout.pages[0].items[0], x: 0, y: 0, w: 2, h: 1 },
+      { ...layout.pages[0].items[1], x: 2, y: 0 },
+    ]);
+  });
 });
