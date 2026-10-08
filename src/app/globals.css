@@ -13,14 +13,14 @@ button { font: inherit; }
 button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
 .agile-grid-shell { height: 100dvh; width: 100%; display: grid; grid-template-rows: 48px minmax(0, 1fr); overflow: hidden; }
-.app-header { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 16px; padding: 0 24px; background: white; border-bottom: 1px solid var(--line); min-width: 0; }
+.app-header { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 16px; padding: 0 24px; background: white; border-bottom: 1px solid var(--line); min-width: 0; }
 .brand { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 .brand-mark { display: grid; grid-template-columns: repeat(2, 6px); gap: 3px; transform: rotate(-4deg); }
 .brand-mark i { width: 6px; height: 6px; background: var(--accent); border-radius: 1px; }
 .brand-mark i:nth-child(2) { opacity: .45; }
 .brand-mark i:nth-child(3) { opacity: .65; }
-h1 { font-size: 15px; letter-spacing: -.3px; margin: 0; font-weight: 700; white-space: nowrap; }
-h1 span { color: var(--muted); font-size: 11px; font-weight: 400; letter-spacing: .4px; margin-left: 10px; }
+.about-popover { position: absolute; z-index: 5; top: 42px; left: 24px; display: flex; flex-direction: column; gap: 3px; min-width: 148px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 7px; background: white; box-shadow: 0 8px 20px rgba(32, 39, 48, .12); color: var(--ink); font-size: 12px; }
+.about-popover span { color: var(--muted); font-size: 11px; }
 .header-actions { display: flex; align-items: center; gap: 16px; min-width: 0; }
 .header-divider { height: 18px; width: 1px; background: var(--line); }
 .page-navigation { display: flex; align-items: center; gap: 10px; }
@@ -30,8 +30,10 @@ h1 span { color: var(--muted); font-size: 11px; font-weight: 400; letter-spacing
 .icon-button svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .icon-button:hover:not(:disabled) { background: #f1f4f4; color: var(--accent); }
 .icon-button:disabled { opacity: .3; cursor: default; }
-.overlay-toggle { gap: 7px; height: 28px; font-size: 11px; padding: 0 9px; white-space: nowrap; }
-.overlay-toggle svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 1.5; }
+.icon-button[aria-pressed="true"] { background: #eef5f1; color: var(--accent); border-color: #d7e7de; }
+.icon-button[aria-pressed="true"]:hover { border-color: #b8ccbf; }
+.about-button svg, .edit-toggle svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.overlay-toggle svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 1.5; }
 .overlay-toggle[aria-pressed="true"] { background: #eef5f1; color: var(--accent); border-color: #d7e7de; }
 .overlay-toggle:hover { border-color: #b8ccbf; }
 
@@ -79,8 +81,8 @@ h1 span { color: var(--muted); font-size: 11px; font-weight: 400; letter-spacing
 
 @media (max-width: 700px) {
   .app-header { grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: 28px 16px; padding: 0 8px; column-gap: 8px; row-gap: 0; }
-  h1 span, .header-divider { display: none; }
   .brand { grid-column: 1; grid-row: 1; }
+  .about-popover { top: 42px; left: 8px; }
   .grid-status { grid-column: 1 / -1; grid-row: 2; font-size: 10px; }
   .header-actions { grid-column: 2; grid-row: 1; }
   .header-actions { gap: 8px; }

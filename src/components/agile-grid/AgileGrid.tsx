@@ -15,6 +15,7 @@ function renderDemo(item: AgileGridItem) {
 
 export function AgileGrid() {
   const [store] = useState(createAgileGridStore);
+  const [aboutOpen, setAboutOpen] = useState(false);
   const config = useStore(store, (value) => value.state.config);
   const layout = useStore(store, (value) => value.state.layout);
   const activePage = useStore(store, (value) => value.state.activePage);
@@ -43,7 +44,26 @@ export function AgileGrid() {
       <header className="app-header">
         <div className="brand">
           <span className="brand-mark" aria-hidden="true"><i /><i /><i /><i /></span>
-          <h1>Agile Grid <span>灵巧网格</span></h1>
+          <button
+            className="icon-button about-button"
+            type="button"
+            aria-label="关于 Agile Grid 灵巧网格"
+            aria-expanded={aboutOpen}
+            title="关于 Agile Grid / 灵巧网格"
+            onClick={() => setAboutOpen((open) => !open)}
+          >
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="12" r="8.5" />
+              <path d="M12 10.5v5" />
+              <path d="M12 7.5h.01" />
+            </svg>
+          </button>
+          {aboutOpen && (
+            <div className="about-popover" role="dialog" aria-label="关于 Agile Grid">
+              <strong>Agile Grid</strong>
+              <span>灵巧网格</span>
+            </div>
+          )}
         </div>
         <div className="grid-status" role="group" aria-label="网格信息">
           <div className="metric-group">
@@ -55,17 +75,34 @@ export function AgileGrid() {
           <span className="status-mode"><i aria-hidden="true" />浏览模式 · 本页 {page.items.length} 个块</span>
         </div>
         <div className="header-actions">
-          <button className="edit-toggle" type="button" aria-pressed={editing} onClick={toggleEditing}>{editing ? "完成" : "编辑"}</button>
+          <button
+            className="icon-button edit-toggle"
+            type="button"
+            aria-label={editing ? "完成编辑" : "进入编辑模式"}
+            aria-pressed={editing}
+            title={editing ? "完成编辑" : "进入编辑模式"}
+            onClick={toggleEditing}
+          >
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="m4 16.5-.75 3.25L6.5 19 17.75 7.75a2.12 2.12 0 0 0-3-3L3.25 16" />
+              <path d="m13.5 6.5 4 4" />
+            </svg>
+          </button>
           <PageNavigation activePage={activePage} pageCount={layout.pages.length} onPageChange={setActivePage} />
-          <span className="header-divider" aria-hidden="true" />
-          <button className="overlay-toggle" type="button" aria-pressed={showOverlay} onClick={toggleOverlay}>
+          <button
+            className="icon-button overlay-toggle"
+            type="button"
+            aria-label="网格辅助线"
+            aria-pressed={showOverlay}
+            title="网格辅助线"
+            onClick={toggleOverlay}
+          >
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <rect x="4" y="4" width="6" height="6" rx="1" />
               <rect x="14" y="4" width="6" height="6" rx="1" />
               <rect x="4" y="14" width="6" height="6" rx="1" />
               <rect x="14" y="14" width="6" height="6" rx="1" />
             </svg>
-            网格辅助线
           </button>
         </div>
       </header>
